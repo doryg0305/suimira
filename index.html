@@ -443,13 +443,10 @@ const POS = {
   browR_poly: [336, 296, 334, 293, 300, 285, 295, 282, 283, 276],
 
   // ─── 卧蠶 (aegyo-sal pocket) ───
-  aegyoL: [133, 33, 145],
-  aegyoR: [362, 263, 374],
-
-  // ─── v3.26: Nose-side Y highlight (inner-eye → down upper nose bridge sides) ───
-  // Korean style highlight connects inner-eye dot down to upper nose bridge sides
-  noseSideHighlightL: [133, 244, 245, 188],  // L inner eye → upper nose side
-  noseSideHighlightR: [362, 464, 465, 412],  // R inner eye → upper nose side
+  // v3.23 drawAegyoSal uses [eye-inner, eye-outer, lower-lid-mid] to build
+  // horizontal pillow at correct width + position
+  aegyoL: [133, 33, 145],   // L: inner corner, outer corner, lower lid below pupil
+  aegyoR: [362, 263, 374],  // R: same logic
 
   // ─── LIP 唇 ───
   lipsCenter:    [13, 14, 0, 17],
@@ -478,11 +475,10 @@ const PRESETS = {
         { shape:'cream', pts: POS.cheekHighL, width: 0.032 },
         { shape:'cream', pts: POS.cheekHighR, width: 0.032 },
       ]},
-      contour: { color: '#c98fe8', label: 'Contour (cheekbone sweep + nose wrap)', strokes: [
-        // v3.26: cheekbone sweep restored as LONG diagonal stroke (ear → mouth corner)
-        // per Korean tutorial reference
-        { pts: POS.cheekboneSweepL, width: 0.014 },
-        { pts: POS.cheekboneSweepR, width: 0.014 },
+      contour: { color: '#c98fe8', label: 'Contour (soft cheekbone hollow)', strokes: [
+        // v3.19: cream blob shadows like blush (no more line "outlines")
+        { shape:'cream', pts: POS.cheekboneSweepL, width: 0.040 },
+        { shape:'cream', pts: POS.cheekboneSweepR, width: 0.040 },
         // 鼻側 subtle wrap
         { shape:'wrap', pts: POS.noseWrapL_v3, width: 0.008 },
         { shape:'wrap', pts: POS.noseWrapR_v3, width: 0.008 },
@@ -504,9 +500,8 @@ const PRESETS = {
       ]},
       brow: { color: '#5a3e2a', label: 'Brow (warm brown - visible)', strokes: [
         // v3.22: closed polygon outlines actual brow shape (not sausage worm)
-        // v3.26: brow back to thin stroke (polygon too thick)
-        { pts: POS.browL_full, width: 0.008 },
-        { pts: POS.browR_full, width: 0.008 },
+        { shape:'polygon', pts: POS.browL_poly },
+        { shape:'polygon', pts: POS.browR_poly },
       ]},
     },
   },
@@ -514,14 +509,14 @@ const PRESETS = {
     name: '🍓 Coral Tinted Lip',
     desc: 'Coral-red tinted lip + brown smoky lid + subtle aegyo-sal + pro-grade highlight + bare-skin look',
     zones: {
-      highlight: { color: '#7fd1e0', label: 'Highlight (Korean Y-zone: nose + inner eye + sides)', strokes: [
-        { shape:'aegyo', pts: POS.aegyoL, color: '#fff0d8' },
-        { shape:'aegyo', pts: POS.aegyoR, color: '#fff0d8' },
+      highlight: { color: '#7fd1e0', label: 'Highlight (nose + eyes focus)', strokes: [
+        // v3.23 卧蠶 = proper horizontal pillow (drawAegyoSal handles shape internally)
+        { shape:'aegyo', pts: POS.aegyoL, color: '#e8b890' },
+        { shape:'aegyo', pts: POS.aegyoR, color: '#e8b890' },
         { pts: POS.noseBridge, width: 0.018 },
-        { pts: POS.noseSideHighlightL, width: 0.008 },
-        { pts: POS.noseSideHighlightR, width: 0.008 },
-        { pts: POS.innerEyeL, width: 0.014 },
-        { pts: POS.innerEyeR, width: 0.014 },
+        { pts: POS.innerEyeL, width: 0.012 },
+        { pts: POS.innerEyeR, width: 0.012 },
+        // REMOVED v3.12: forehead + cheek cream blobs
       ]},
       contour: { color: '#c98fe8', label: 'Contour', strokes: [
         { pts: POS.cheekboneSweepL, width: 0.018 },
@@ -547,9 +542,8 @@ const PRESETS = {
         { pts: POS.lipsCenter, width: 0.028, fill: 'oval' },
       ]},
       brow: { color: '#5e3f2c', label: 'Brow (defined warm brown filled)', strokes: [
-        // v3.26: brow back to thin stroke (polygon too thick)
-        { pts: POS.browL_full, width: 0.008 },
-        { pts: POS.browR_full, width: 0.008 },
+        { shape:'polygon', pts: POS.browL_poly },
+        { shape:'polygon', pts: POS.browR_poly },
       ]},
     },
   },
@@ -569,9 +563,9 @@ const PRESETS = {
         { pts: POS.chinHorizontal, width: 0.016 },
         // REMOVED v3.12: forehead cream + cheek cream
       ]},
-      contour: { color: '#c98fe8', label: 'Contour (very subtle sweep)', strokes: [
-        { pts: POS.cheekboneSweepL, width: 0.010 },
-        { pts: POS.cheekboneSweepR, width: 0.010 },
+      contour: { color: '#c98fe8', label: 'Contour (very subtle cream)', strokes: [
+        { shape:'cream', pts: POS.cheekboneSweepL, width: 0.028 },
+        { shape:'cream', pts: POS.cheekboneSweepR, width: 0.028 },
         { shape:'wrap', pts: POS.noseWrapL_v3, width: 0.006 },
         { shape:'wrap', pts: POS.noseWrapR_v3, width: 0.006 },
       ]},
@@ -589,9 +583,8 @@ const PRESETS = {
         { pts: POS.lipsCenter, width: 0.022, fill: 'oval' },
       ]},
       brow: { color: '#6a4a35', label: 'Brow (Korean straight medium brown)', strokes: [
-        // v3.26: brow back to thin stroke (polygon too thick)
-        { pts: POS.browL_full, width: 0.008 },
-        { pts: POS.browR_full, width: 0.008 },
+        { shape:'polygon', pts: POS.browL_poly },
+        { shape:'polygon', pts: POS.browR_poly },
       ]},
     },
   },
@@ -624,9 +617,8 @@ const PRESETS = {
         { pts: POS.lipsCenter, width: 0.018, fill: 'oval' },
       ]},
       brow: { color: '#7a6450', label: 'Brow (brushed natural shape)', strokes: [
-        // v3.26: brow back to thin stroke (polygon too thick)
-        { pts: POS.browL_full, width: 0.008 },
-        { pts: POS.browR_full, width: 0.008 },
+        { shape:'polygon', pts: POS.browL_poly },
+        { shape:'polygon', pts: POS.browR_poly },
       ]},
     },
   },

@@ -75,7 +75,13 @@
   }
   nav .logo{
     font-size:60px; letter-spacing:-1.5px; font-weight:400; color:var(--ink);
-    line-height:1;
+    line-height:1; position:relative;
+  }
+  nav .logo-sub{
+    display:block; font-family:'Inter', sans-serif;
+    font-size:11px; letter-spacing:0.55em; font-weight:600;
+    color:var(--ink-faded); text-transform:uppercase;
+    margin-top:6px; margin-left:2px;
   }
   /* v3.21: glowing i-dots in wordmark */
   .i-glow{ position:relative; display:inline-block; }
@@ -225,8 +231,14 @@
     color:var(--ink); font-weight:400; z-index:1; position:relative;
   }
   .exp-wordmark .dot{color:var(--primary);}
+  .exp-wordmark-sub{
+    margin-top:14px; font-family:'Inter', sans-serif;
+    font-size:13px; letter-spacing:0.65em; font-weight:700;
+    color:var(--ink-faded); text-transform:uppercase;
+    z-index:1; position:relative;
+  }
   .exp-wordmark-tag{
-    margin-top:18px; font-size:13px; letter-spacing:.2em;
+    margin-top:14px; font-size:13px; letter-spacing:.2em;
     text-transform:uppercase; color:var(--ink-soft); z-index:1; position:relative;
   }
   @media (max-width:900px){ .exp-wordmark{font-size:64px;} }
@@ -301,7 +313,10 @@
 
   <!-- NAV -->
   <nav>
-    <div class="serif logo">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
+    <div>
+      <div class="serif logo">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
+      <span class="logo-sub">SUIMIRA</span>
+    </div>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#experience">Experience</a>
@@ -362,7 +377,8 @@
   <section id="experience" class="experience">
     <div class="experience-grid">
       <div class="exp-card exp-wordmark-card">
-        <div class="exp-wordmark serif">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra<span class="dot">.</span></div>
+        <div class="exp-wordmark serif">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
+        <div class="exp-wordmark-sub">SUIMIRA</div>
         <div class="exp-wordmark-tag">A mirror that understands you.</div>
       </div>
       <div>

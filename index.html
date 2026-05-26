@@ -795,6 +795,15 @@ function drawPresetPreview(ctx, lm, w, h){
   for (const stroke of z.contour.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.contour.color, w, h, 'soft');
   ctx.restore();
 
+  // v3.15: brow pass (multiply for hair-like deposit)
+  if (z.brow) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    ctx.globalAlpha = 0.65;
+    for (const stroke of z.brow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.brow.color, w, h, 'soft');
+    ctx.restore();
+  }
+
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
   ctx.globalAlpha = 0.60;
@@ -908,7 +917,7 @@ function drawPreviewStroke(ctx, lm, stroke, color, w, h, mode){
 
 function drawOverlay(ctx, lm, w, h){
   // v3: All 5 layers for active preset
-  const ALL_LAYERS = ['contour', 'eyeshadow', 'blush', 'highlight', 'lip'];
+  const ALL_LAYERS = ['contour', 'brow', 'eyeshadow', 'blush', 'highlight', 'lip'];
   let zonesToDraw = [];
 
   // ✨ v3.3: PREVIEW mode = simulate finished makeup look

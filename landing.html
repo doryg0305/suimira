@@ -5,137 +5,182 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Suimira — Live AR Makeup Mirror for Asian Faces</title>
 <meta name="description" content="Live AR makeup mirror for Asian faces. Bring a filtered selfie of how you want to look — Suimira shows step-by-step exactly where to paint each makeup zone.">
-
 <meta property="og:title" content="Suimira — Live AR Makeup Mirror">
 <meta property="og:description" content="Reverse-engineering filter target → real makeup steps. Asian-first. Built solo with Claude.">
+<meta property="og:image" content="hero-muse.jpg">
 <meta property="og:type" content="website">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --bg:#1a0f1e; --bg2:#251a2a; --bg3:#2f2235;
-    --ink:#f5e9ed; --muted:#a89aa3; --line:#3a2c3e;
-    --rose:#e8a0b8; --gold:#d4af6f; --hi:#7fd1e0; --contour:#c98fe8;
+    /* Warm peach / cream palette — inspired by hero muse illustration */
+    --bg:#fbf6f0;          /* warm cream main */
+    --bg-soft:#f7ebe0;     /* soft peach cream */
+    --bg-peach:#f5d9c4;    /* peach card */
+    --bg-mirror:#fadec7;   /* mirror glow */
+    --ink:#3d2a1f;         /* warm dark brown */
+    --ink-soft:#5c4030;    /* softer brown */
+    --muted:#8a6f5c;       /* warm taupe */
+    --line:#ead8c5;        /* cream beige line */
+    --rose:#d99080;        /* warm rose */
+    --peach:#e6a98a;       /* peach accent */
+    --gold:#c89668;        /* warm gold */
+    --highlight:#fff4ea;   /* soft highlight */
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
   html, body{
     background:var(--bg); color:var(--ink);
-    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-    line-height:1.6; min-height:100vh;
+    font-family:'Inter', -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+    line-height:1.7; min-height:100vh; font-weight:400;
   }
-  .wrap{max-width:760px; margin:0 auto; padding:60px 24px;}
+  .wrap{max-width:880px; margin:0 auto; padding:50px 28px;}
 
   /* Hero */
-  header{text-align:center; margin-bottom:48px;}
+  header{text-align:center; margin-bottom:36px;}
   .logo{
-    font-size:48px; font-weight:800; letter-spacing:-2px;
-    background:linear-gradient(135deg, var(--rose), var(--gold));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-    margin-bottom:8px;
+    font-family:'Cormorant Garamond', serif;
+    font-size:68px; font-weight:600; letter-spacing:-1.5px;
+    color:var(--ink);
+    margin-bottom:4px; line-height:1;
   }
-  .tagline{font-size:18px; color:var(--muted); letter-spacing:.3px;}
+  .logo .accent{color:var(--rose); font-style:italic;}
+  .tagline{
+    font-size:15px; color:var(--muted); letter-spacing:0.4px; font-weight:400;
+    margin-top:6px;
+  }
   .badge{
-    display:inline-block; font-size:11px; color:var(--gold);
-    border:1px solid var(--line); padding:4px 12px; border-radius:999px;
-    margin-top:14px; letter-spacing:.1em;
+    display:inline-block; font-size:10px; color:var(--gold);
+    border:1px solid var(--line); padding:5px 14px; border-radius:999px;
+    margin-top:18px; letter-spacing:.15em; text-transform:uppercase;
+    background:var(--highlight);
   }
 
+  /* Hero illustration */
+  .hero-img{
+    margin:30px auto 0; max-width:560px; width:100%;
+    border-radius:20px; overflow:hidden;
+    box-shadow:0 12px 40px rgba(217,144,128,0.18);
+    background:var(--bg-soft);
+  }
+  .hero-img img{width:100%; display:block;}
+
   /* Hero pitch */
-  .hero{
-    background:linear-gradient(135deg, var(--bg2), var(--bg3));
-    border:1px solid var(--line); border-radius:20px;
-    padding:32px 28px; margin:32px 0; text-align:center;
+  .pitch{
+    background:linear-gradient(140deg, var(--bg-soft), var(--bg-peach));
+    border-radius:24px; padding:38px 32px; margin:32px 0;
+    text-align:center; border:1px solid var(--line);
   }
-  .hero h2{
-    font-size:24px; font-weight:600; margin-bottom:16px;
-    color:var(--ink); line-height:1.4;
+  .pitch h2{
+    font-family:'Cormorant Garamond', serif;
+    font-size:28px; font-weight:500; line-height:1.4; color:var(--ink);
+    margin-bottom:14px;
   }
-  .hero p{font-size:16px; color:var(--muted);}
-  .hero .em{color:var(--rose); font-weight:600;}
+  .pitch h2 .em{color:var(--rose); font-style:italic; font-weight:600;}
+  .pitch p{font-size:15px; color:var(--ink-soft);}
 
   /* CTA */
   .cta{
-    display:flex; gap:12px; justify-content:center; margin:32px 0; flex-wrap:wrap;
+    display:flex; gap:14px; justify-content:center; margin:30px 0; flex-wrap:wrap;
   }
   .btn{
-    display:inline-block; padding:14px 28px; border-radius:12px;
-    text-decoration:none; font-size:14px; font-weight:600; letter-spacing:.05em;
-    transition:transform .15s ease, box-shadow .15s ease;
+    display:inline-block; padding:14px 32px; border-radius:999px;
+    text-decoration:none; font-size:14px; font-weight:500; letter-spacing:.04em;
+    transition:transform .2s ease, box-shadow .2s ease;
   }
-  .btn:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(232,160,184,.2);}
+  .btn:hover{transform:translateY(-2px); box-shadow:0 10px 28px rgba(217,144,128,.25);}
   .btn-primary{
-    background:linear-gradient(135deg, var(--rose), var(--gold));
-    color:#2a1020;
+    background:linear-gradient(135deg, var(--rose), var(--peach));
+    color:#fff;
   }
   .btn-ghost{
-    background:var(--bg2); color:var(--ink); border:1px solid var(--line);
+    background:transparent; color:var(--ink-soft); border:1px solid var(--muted);
   }
 
   /* Section */
-  section{margin:48px 0;}
-  h3{
-    font-size:13px; text-transform:uppercase; letter-spacing:.15em;
-    color:var(--gold); margin-bottom:16px; font-weight:600;
+  section{margin:56px 0;}
+  h3.section-title{
+    font-family:'Cormorant Garamond', serif;
+    font-size:13px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:18px; font-weight:600;
+    text-align:center;
   }
 
-  /* Zones grid */
+  /* Zones */
   .zones{
-    display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
-    gap:12px; margin-top:16px;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:14px; margin-top:18px;
   }
   .zone{
-    background:var(--bg2); border:1px solid var(--line); border-radius:14px;
-    padding:14px 16px;
+    background:var(--highlight); border:1px solid var(--line); border-radius:16px;
+    padding:18px 20px; text-align:center;
   }
   .zone .dot{
-    display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px;
-    vertical-align:-1px;
+    display:inline-block; width:36px; height:36px; border-radius:50%;
+    margin-bottom:8px;
   }
   .zone .name{font-size:14px; color:var(--ink); font-weight:600;}
   .zone .desc{font-size:12px; color:var(--muted); margin-top:4px; line-height:1.5;}
 
-  /* How it differs */
+  /* Compare */
   .compare{
-    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
-    padding:20px 22px;
+    background:var(--bg-soft); border:1px solid var(--line); border-radius:20px;
+    padding:24px 28px;
   }
-  .compare .row{display:flex; align-items:flex-start; gap:14px; margin:10px 0; font-size:14px;}
+  .compare .row{
+    display:flex; align-items:flex-start; gap:18px; margin:14px 0; font-size:14px;
+    padding-bottom:14px; border-bottom:1px dashed var(--line);
+  }
+  .compare .row:last-child{border-bottom:none; padding-bottom:0;}
   .compare .other{color:var(--muted); flex:1;}
-  .compare .ours{color:var(--rose); flex:1; font-weight:500;}
-  .compare .other:before{content:"They:"; display:block; font-size:10px; letter-spacing:.1em;
-    color:var(--muted); text-transform:uppercase; margin-bottom:2px;}
-  .compare .ours:before{content:"Suimira:"; display:block; font-size:10px; letter-spacing:.1em;
-    color:var(--gold); text-transform:uppercase; margin-bottom:2px;}
+  .compare .ours{color:var(--ink); flex:1; font-weight:500;}
+  .compare .other:before{content:"Other tools:"; display:block; font-size:10px; letter-spacing:.12em;
+    color:var(--muted); text-transform:uppercase; margin-bottom:4px; font-weight:600;}
+  .compare .ours:before{content:"Suimira:"; display:block; font-size:10px; letter-spacing:.12em;
+    color:var(--rose); text-transform:uppercase; margin-bottom:4px; font-weight:600;}
 
   /* Founder */
   .founder{
-    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
-    padding:24px 26px; margin-top:16px;
+    background:linear-gradient(140deg, var(--bg-soft), var(--highlight));
+    border:1px solid var(--line); border-radius:20px;
+    padding:30px 32px; margin-top:18px;
   }
-  .founder .name{font-size:18px; font-weight:700; color:var(--ink); margin-bottom:6px;}
-  .founder .bio{font-size:14px; color:var(--muted); line-height:1.65;}
-  .founder .links{display:flex; gap:14px; margin-top:14px; flex-wrap:wrap;}
-  .founder a{color:var(--hi); text-decoration:none; font-size:13px;}
-  .founder a:hover{text-decoration:underline;}
+  .founder .name{
+    font-family:'Cormorant Garamond', serif;
+    font-size:24px; font-weight:600; color:var(--ink); margin-bottom:8px;
+  }
+  .founder .bio{font-size:14px; color:var(--ink-soft); line-height:1.75;}
+  .founder .links{display:flex; gap:18px; margin-top:18px; flex-wrap:wrap;}
+  .founder a{color:var(--rose); text-decoration:none; font-size:13px; font-weight:500;}
+  .founder a:hover{color:var(--ink);}
 
   /* Waitlist */
   .waitlist{
-    background:linear-gradient(135deg, var(--rose), var(--gold));
-    color:#2a1020; border-radius:16px; padding:22px 24px; text-align:center;
+    background:linear-gradient(135deg, var(--rose), var(--peach));
+    color:#fff; border-radius:24px; padding:32px 30px; text-align:center;
+    box-shadow:0 12px 40px rgba(217,144,128,.2);
   }
-  .waitlist h3{color:#2a1020; opacity:.85;}
-  .waitlist p{font-size:14px; margin:6px 0 14px;}
-  .waitlist .email{font-size:15px; font-weight:600;}
-  .waitlist a{color:#2a1020; text-decoration:underline;}
+  .waitlist h3{
+    font-family:'Cormorant Garamond', serif;
+    color:#fff; font-size:24px; font-weight:600; margin-bottom:10px; letter-spacing:0;
+    text-transform:none;
+  }
+  .waitlist p{font-size:14px; margin:8px 0; opacity:.95;}
+  .waitlist .email{font-size:15px; font-weight:500;}
+  .waitlist a{color:#fff; text-decoration:underline;}
 
   footer{
-    text-align:center; margin-top:60px; padding-top:24px;
+    text-align:center; margin-top:60px; padding-top:26px;
     border-top:1px solid var(--line); font-size:12px; color:var(--muted);
+    line-height:1.8;
   }
 
-  @media (max-width: 520px){
-    .wrap{padding:40px 18px;}
-    .logo{font-size:36px;}
-    .hero h2{font-size:20px;}
+  @media (max-width: 560px){
+    .wrap{padding:36px 20px;}
+    .logo{font-size:52px;}
+    .pitch h2{font-size:22px;}
   }
 </style>
 </head>
@@ -143,50 +188,59 @@
 <div class="wrap">
 
   <header>
-    <div class="logo">Suimira</div>
-    <div class="tagline">A live AR makeup mirror for Asian faces.</div>
-    <span class="badge">v3.2 MVP · MAY 2026</span>
+    <div class="logo">Suimira<span class="accent">.</span></div>
+    <div class="tagline">A live AR makeup mirror for Asian faces</div>
+    <span class="badge">v3.7 MVP · MAY 2026</span>
+
+    <div class="hero-img">
+      <img src="hero-muse.jpg" alt="Suimira hero illustration — woman at vanity mirror with warm peach lighting" />
+    </div>
   </header>
 
-  <div class="hero">
+  <div class="pitch">
     <h2>Bring a filtered selfie of how you want to look —<br>
     <span class="em">Suimira shows you exactly where to paint.</span></h2>
     <p>Step-by-step makeup placement projected onto your live face. Markers follow you as you turn your head.</p>
   </div>
 
   <div class="cta">
-    <a href="./" class="btn btn-primary">▶ Try the live demo</a>
+    <a href="./" class="btn btn-primary">Try the live demo →</a>
     <a href="https://github.com/doryg0305/suimira" class="btn btn-ghost">View on GitHub</a>
   </div>
 
   <section>
-    <h3>5 makeup zones, live tracking</h3>
+    <h3 class="section-title">5 makeup zones · Live tracking</h3>
     <div class="zones">
       <div class="zone">
-        <div class="name"><i class="dot" style="background:#c98fe8;"></i>Contour</div>
+        <div class="dot" style="background:linear-gradient(135deg,#c98fe8,#a86ec5);"></div>
+        <div class="name">Contour</div>
         <div class="desc">Cheekbone sweep, nose wrap, jaw shadow</div>
       </div>
       <div class="zone">
-        <div class="name"><i class="dot" style="background:#d4a890;"></i>Eyeshadow</div>
-        <div class="desc">Lid base + outer corner smoky deepen</div>
+        <div class="dot" style="background:linear-gradient(135deg,#d4a890,#9a6856);"></div>
+        <div class="name">Eyeshadow</div>
+        <div class="desc">Lid base + outer smoky deepen</div>
       </div>
       <div class="zone">
-        <div class="name"><i class="dot" style="background:#e8a0b8;"></i>Blush</div>
+        <div class="dot" style="background:linear-gradient(135deg,#ff7a96,#e88aa8);"></div>
+        <div class="name">Blush</div>
         <div class="desc">Apple of cheek, gradient soft</div>
       </div>
       <div class="zone">
-        <div class="name"><i class="dot" style="background:#7fd1e0;"></i>Highlight</div>
-        <div class="desc">Under-eye triangle, T-zone, brow bone</div>
+        <div class="dot" style="background:linear-gradient(135deg,#fff4ea,#e6a98a);"></div>
+        <div class="name">Highlight</div>
+        <div class="desc">Under-pupil triangle, T-zone, chin</div>
       </div>
       <div class="zone">
-        <div class="name"><i class="dot" style="background:#d76a78;"></i>Lip</div>
+        <div class="dot" style="background:linear-gradient(135deg,#d76a78,#d75850);"></div>
+        <div class="name">Lip</div>
         <div class="desc">Center gradient, tinted edges</div>
       </div>
     </div>
   </section>
 
   <section>
-    <h3>How Suimira is different</h3>
+    <h3 class="section-title">How Suimira is different</h3>
     <div class="compare">
       <div class="row">
         <div class="other">Pre-set looks designed by celebrity makeup artists — you follow them.</div>
@@ -197,23 +251,23 @@
         <div class="ours">AR placement markers that follow your face — actual painting practice tool.</div>
       </div>
       <div class="row">
-        <div class="other">Western face geometry defaults, Eurocentric beauty bias.</div>
-        <div class="ours">Asian face structure first — under-eye triangle, nose bridge, eyelid type aware.</div>
+        <div class="other">Western face geometry defaults. Eurocentric beauty bias.</div>
+        <div class="ours">Asian face structure first — under-pupil triangle, nose bridge, eyelid type aware.</div>
       </div>
     </div>
   </section>
 
   <section>
-    <h3>Built by</h3>
+    <h3 class="section-title">Built by</h3>
     <div class="founder">
       <div class="name">Dory Kuo</div>
       <div class="bio">
         UCLA Cognitive Science (GPA 3.72) → cancer research at UCLA David Geffen School of Medicine → Operations &amp; Growth Analyst at Generation Next Fertility (Manhattan IVF clinic). Currently founding Suimira (Aug 2025 – present), built solo using Claude (Anthropic) as engineering proxy. Relocating to SF Bay Area June 27, 2026.
       </div>
       <div class="links">
-        <a href="https://www.linkedin.com/in/dory-kuo/" target="_blank">LinkedIn</a>
-        <a href="https://github.com/doryg0305/suimira" target="_blank">GitHub</a>
-        <a href="mailto:doryg0305@gmail.com">Email</a>
+        <a href="https://www.linkedin.com/in/dory-kuo/" target="_blank">LinkedIn ↗</a>
+        <a href="https://github.com/doryg0305/suimira" target="_blank">GitHub ↗</a>
+        <a href="mailto:doryg0305@gmail.com">Email ↗</a>
       </div>
     </div>
   </section>
@@ -221,7 +275,7 @@
   <section>
     <div class="waitlist">
       <h3>Get on the waitlist</h3>
-      <p>v3.2 MVP runs in any browser. v4 (mobile + filter target upload) coming soon.</p>
+      <p>v3.7 MVP runs in any browser. v4 (mobile + filter target upload) coming soon.</p>
       <p class="email">Email <a href="mailto:doryg0305@gmail.com?subject=Suimira%20waitlist">doryg0305@gmail.com</a> with subject "Suimira waitlist" to get the first invite.</p>
     </div>
   </section>

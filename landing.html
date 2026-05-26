@@ -77,6 +77,24 @@
     font-size:60px; letter-spacing:-1.5px; font-weight:400; color:var(--ink);
     line-height:1;
   }
+  /* v3.21: glowing i-dots in wordmark */
+  .i-glow{ position:relative; display:inline-block; }
+  .i-glow .i-dot{
+    position:absolute;
+    top:0.05em; left:50%; transform:translateX(-50%);
+    width:0.16em; height:0.16em;
+    border-radius:50%;
+    background:var(--primary);
+    box-shadow:
+      0 0 0.15em rgba(217,144,128,0.9),
+      0 0 0.30em rgba(217,144,128,0.7),
+      0 0 0.60em rgba(230,169,138,0.5);
+    animation: i-glow-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes i-glow-pulse{
+    0%, 100% { opacity: 0.9; transform: translateX(-50%) scale(1); }
+    50%      { opacity: 1;   transform: translateX(-50%) scale(1.15); }
+  }
   nav .nav-links{
     display:flex; gap:40px; font-size:13px; letter-spacing:.06em; color:var(--ink-soft);
   }
@@ -283,7 +301,7 @@
 
   <!-- NAV -->
   <nav>
-    <div class="serif logo">suimira</div>
+    <div class="serif logo">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#experience">Experience</a>
@@ -345,7 +363,7 @@
   <section id="experience" class="experience">
     <div class="experience-grid">
       <div class="exp-card exp-wordmark-card">
-        <div class="exp-wordmark serif">suimira<span class="dot">.</span></div>
+        <div class="exp-wordmark serif">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra<span class="dot">.</span></div>
         <div class="exp-wordmark-tag">A mirror that understands you.</div>
       </div>
       <div>

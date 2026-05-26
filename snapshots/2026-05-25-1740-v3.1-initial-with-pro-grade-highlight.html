@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#1a1320" />
+<title>Suimira · AI 妝容鏡</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg:#1a1320; --bg2:#241829; --ink:#f4ecf2; --muted:#b49db0;
+    --rose:#e8a0b8; --gold:#e8c98f; --line:#3a2c3e;
+    --hi:#7fd1e0; --contour:#c98fe8;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 60px;}
+  header{text-align:center;padding:8px 0 4px;}
+  .logo{font-size:26px;font-weight:700;letter-spacing:.18em;
+    background:linear-gradient(90deg,var(--rose),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  .tag{font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:2px;}
+  .badge{display:inline-block;font-size:10px;color:var(--gold);border:1px solid var(--line);
+    border-radius:999px;padding:2px 8px;margin-top:6px;letter-spacing:.1em;}
+
+  .modes{display:flex;gap:8px;margin:18px 0 12px;}
+  .modes button{flex:1;background:var(--bg2);color:var(--muted);border:1px solid var(--line);
+    border-radius:12px;padding:12px;font-size:14px;font-weight:600;transition:.2s;}
+  .modes button.on{background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;border-color:transparent;}
+
+  .stage{position:relative;width:100%;aspect-ratio:3/4;background:var(--bg2);
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;
+    align-items:center;justify-content:center;}
+  .stage canvas,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .stage video{transform:scaleX(-1);}
+  .stage canvas{transform:scaleX(-1);}
+  #uploadCanvas{transform:none;}
+  .hint{color:var(--muted);font-size:13px;text-align:center;padding:0 30px;z-index:1;}
+  .hint b{color:var(--ink);}
+
+  .controls{display:flex;gap:10px;margin:14px 0;}
+  .controls .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;}
+  .btn-primary{background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;}
+  .btn-ghost{background:var(--bg2);color:var(--ink);border:1px solid var(--line)!important;}
+  input[type=file]{display:none;}
+
+  /* ✨ NEW v1: layer toggle */
+  .layers{display:flex;gap:6px;margin:12px 0 8px;flex-wrap:wrap;}
+  .layers button{flex:1;min-width:60px;padding:8px 6px;border:1px solid var(--line);
+    background:var(--bg2);color:var(--muted);border-radius:10px;font-size:11px;
+    font-weight:600;transition:.2s;letter-spacing:.02em;}
+  .layers button.on{border-color:transparent;color:#2a1020;}
+  .layers button[data-zone=all].on{background:linear-gradient(135deg,var(--rose),var(--gold));}
+  .layers button[data-zone=highlight].on{background:var(--hi);}
+  .layers button[data-zone=contour].on{background:var(--contour);}
+  .layers button[data-zone=blush].on{background:var(--rose);}
+  .layers button[data-zone=step].on{background:var(--gold);}
+  .layers button[data-zone=preview].on{background:linear-gradient(90deg,var(--hi),var(--contour),var(--rose));color:#2a1020;}
+
+  /* ✨ v1.1: step-by-step expanded panel */
+  .stepbar{display:none;background:var(--bg2);border:1px solid var(--line);
+    border-radius:12px;padding:14px 16px;margin-top:8px;flex-direction:column;gap:10px;}
+  .stepbar.show{display:flex;}
+  .step-nav{display:flex;align-items:center;gap:10px;}
+  .step-nav .info{flex:1;font-size:14px;color:var(--ink);}
+  .step-nav .info b{color:var(--gold);}
+  .step-nav button{background:var(--bg);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;}
+  .step-nav button:disabled{opacity:.3;}
+  .step-detail{font-size:13px;line-height:1.7;color:var(--ink);
+    background:var(--bg);border-radius:10px;padding:12px 14px;}
+  .step-detail .row{display:flex;gap:8px;margin:4px 0;}
+  .step-detail .label{color:var(--muted);min-width:60px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
+  .step-detail .val{flex:1;}
+  .step-detail .why{color:var(--gold);font-style:italic;margin-bottom:8px;font-size:13px;border-left:2px solid var(--gold);padding-left:10px;}
+  .step-detail .apply-list{margin:6px 0 6px 0;padding:0;list-style:none;}
+  .step-detail .apply-list li{padding:3px 0;font-size:13px;}
+  .step-detail .tip{color:var(--rose);font-size:12px;margin-top:6px;padding:8px;background:#3a2c3e;border-radius:8px;}
+  .step-detail .blend{color:var(--hi);font-size:12px;margin-top:6px;padding:8px;background:#1f2c30;border-radius:8px;}
+
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:6px 0 2px;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+
+  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px;}
+  .panel h3{margin:0 0 10px;font-size:13px;color:var(--gold);letter-spacing:.08em;font-weight:600;}
+  .row{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:14px;}
+  .swatch{width:42px;height:42px;border-radius:10px;border:2px solid #fff3;flex:none;}
+  .kv{font-size:13px;color:var(--muted);}
+  .kv b{color:var(--ink);font-weight:600;}
+  .advice{font-size:14px;line-height:1.7;color:var(--ink);}
+  .advice li{margin:5px 0;}
+  .disclaim{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+  .hidden{display:none!important;}
+  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;margin-top:8px;}
+  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);
+    border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px;}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">SUIMIRA</div>
+    <div class="tag">AI 妝容鏡 · 精確點位 · 分層引導</div>
+    <div class="badge">BETA</div>
+  </header>
+
+  <div class="modes">
+    <button id="mUpload" class="on">📷 上傳照片</button>
+    <button id="mLive">🤳 即時鏡頭</button>
+  </div>
+
+  <div class="stage">
+    <video id="video" class="hidden" playsinline muted></video>
+    <canvas id="liveCanvas" class="hidden"></canvas>
+    <canvas id="uploadCanvas" class="hidden"></canvas>
+    <div id="hint" class="hint">點下面 <b>選一張臉照</b><br>正面、光線均勻、不要瀏海擋臉效果最好</div>
+  </div>
+
+  <!-- ✨ v3: PRESET selector — 4 風格選妝、不是「我推薦你」 -->
+  <div id="presets" class="layers hidden">
+    <button data-preset="sweet" class="on">🍑 韓系暖粉 sparkle</button>
+    <button data-preset="bold">🍓 染唇暖橘紅</button>
+    <button data-preset="kpop">❄️ 韓系冷淡</button>
+    <button data-preset="bare">💧 素顏感</button>
+  </div>
+
+  <!-- ✨ v3: Layer view — 切換看哪層 markers / 進入步驟模式 -->
+  <div id="layers" class="layers hidden">
+    <button data-zone="all" class="on">全部點位</button>
+    <button data-zone="highlight">提亮</button>
+    <button data-zone="contour">修容</button>
+    <button data-zone="blush">腮紅</button>
+    <button data-zone="eyeshadow">眼影</button>
+    <button data-zone="lip">唇</button>
+    <button data-zone="step">步驟模式</button>
+  </div>
+
+  <!-- ✨ v1.2: Step-by-step expanded panel -->
+  <div id="stepbar" class="stepbar">
+    <div class="step-nav">
+      <button id="prevStep">‹ 上一步</button>
+      <div class="info">Step <b id="stepNum">1</b>/3 · <b id="stepName">修容</b></div>
+      <button id="nextStep">下一步 ›</button>
+    </div>
+    <div class="step-detail" id="stepDetail"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--hi)"></i>提亮 / 高光</span>
+    <span><i class="dot" style="background:var(--contour)"></i>修容 / 陰影</span>
+    <span><i class="dot" style="background:var(--rose)"></i>腮紅</span>
+  </div>
+
+  <div class="controls">
+    <input type="file" id="file" accept="image/*" />
+    <button id="uploadBtn" class="btn btn-primary">選一張臉照</button>
+    <button id="camBtn" class="btn btn-primary hidden">開鏡頭</button>
+    <button id="snapBtn" class="btn btn-ghost hidden">凍結這一格</button>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <div id="results" class="hidden">
+    <div class="panel">
+      <h3>膚色取樣</h3>
+      <div class="row">
+        <div id="swatch" class="swatch"></div>
+        <div class="kv">取自臉頰 + 額頭平均<br><b id="hex">#------</b> · 色調傾向 <b id="undertone">—</b></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>臉部結構</h3>
+      <div class="kv">推測臉型 <b id="faceshape">—</b> · 長寬比 <b id="ratio">—</b></div>
+    </div>
+    <div class="panel">
+      <h3>妝容建議</h3>
+      <ul id="advice" class="advice"></ul>
+    </div>
+  </div>
+
+  <div class="disclaim">
+    ⚠️ 精確點位由 MediaPipe FaceMesh 468 點推算。色號/建議為規則式打樣，尚未接專業色彩匹配。所有運算在你的裝置本機完成，照片不上傳、不儲存。
+  </div>
+</div>
+
+<script>
+let FaceLandmarker, FilesetResolver;
+
+const $ = id => document.getElementById(id);
+const statusEl = $('status');
+const setStatus = (t, busy=false) => statusEl.innerHTML = busy ? `<span class="spin"></span>${t}` : t;
+
+let landmarker = null, mode = 'upload', stream = null, rafId = null;
+let activeZone = 'all';
+let stepMode = false;
+let currentStep = 0;
+// ✨ v3: 5 zone 順序 (傳統化妝順序)
+const stepOrder = ['contour', 'eyeshadow', 'blush', 'highlight', 'lip'];
+const stepNames = {
+  contour: '修容 / Contour',
+  eyeshadow: '眼影 / Eyeshadow',
+  blush: '腮紅 / Blush',
+  highlight: '提亮 / Highlight',
+  lip: '唇彩 / Lip',
+};
+const stepDetails = {
+  contour: {
+    why: '修容先做：建立陰影、定義骨架',
+    tool: '🖌️ Angled / fan brush 修容刷',
+    product: '比膚色深 2 階的冷棕（避免橘色看起來髒）',
+    color: '冷棕 / Taupe / Cool brown',
+    intensity: '中（剛好看得到陰影、但不是條黑線）',
+    apply: [
+      '1️⃣ 顴骨下緣：嘴角到耳朵中點，斜向上掃 (主力修容)',
+      '2️⃣ 下顎線：下巴往耳朵方向輕掃，柔化下顎輪廓',
+      '3️⃣ 鼻翼旁：鼻側 vertical 輕筆，不要重',
+      '4️⃣ 太陽穴：髮際線旁少量，拉長臉型'
+    ],
+    technique: '⚠️ 重點：少量多次。每次刷子在手背 tap 兩下抖粉。先輕後重，可加不可減。',
+    pressure: '🪶 力道：很輕第一遍，需要加深再疊一遍',
+    blend: '畫完用乾淨 spoolie 或大蓬鬆刷暈染 5-10 下，不留硬邊',
+    timeMin: 5,
+    timeMax: 8
+  },
+  highlight: {
+    why: 'K-beauty Suzy 風格 — dewy glass skin 透光感',
+    tool: '🖌️ 細刷 + 指腹輕拍 (霜狀手指最自然)',
+    product: '霜狀 (cream) > 粉狀 — dewy 質感',
+    color: '暖調 → 香檳金 / 冷調 → 冷白珠光 / 中性 → 米白',
+    intensity: '輕（米粒大小, 1-2 拍）',
+    apply: [
+      '1️⃣ 鼻樑 + 鼻頭：眉間下方到鼻尖，細刷一條 thin vertical line + 鼻頭輕點',
+      '2️⃣ 人中：鼻子下方到上嘴唇之間 V 字凹陷處（不要碰到嘴唇！）只一個小點',
+      '3️⃣ 下巴：下嘴唇正下方一公分（不是下巴最下面！），少量輕點'
+    ],
+    technique: '⚠️ 重點：「會反光的小點」不是大片亮。米粒大小，少量比較自然。多了會油亮像出汗。',
+    pressure: '🪶 力道：很輕。刷子在手背先 tap 兩下抖掉多餘粉，然後輕拍。霜狀指腹輕點。',
+    blend: '指腹輕拍融合 3-5 下',
+    timeMin: 3,
+    timeMax: 5
+  },
+  blush: {
+    why: '最後腮紅：基底立體做好後，加入氣色',
+    tool: '🖌️ 大蓬鬆腮紅刷（圓頭）',
+    product: '霜狀 (beginner 友善 易暈染) 或 粉狀（看膚質）',
+    color: '暖調 → 蜜桃 / 珊瑚 / 冷調 → 玫瑰 / 莓粉 / 中性 → 自然粉',
+    apply: [
+      '1️⃣ 蘋果肌（點 1 左右）：微笑後最高點，圓形畫圈拍開',
+      '輕拍 → 暈染 → 從蘋果肌中心往太陽穴帶'
+    ],
+    technique: '⚠️ 重點：先微笑找蘋果肌正中心，那個鼓起來的地方就是位置。',
+    blend: '霜狀用指腹拍開，粉狀用大刷子圓形畫圈暈染',
+    timeMin: 3,
+    timeMax: 5
+  }
+};
+
+let lastLandmarks = null, lastImageSize = null;
+
+async function initModel(){
+  if (landmarker) return landmarker;
+  setStatus('載入 AI 模型中…（第一次需幾秒）', true);
+  try{
+    if(!FaceLandmarker){
+      const mod = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");
+      FaceLandmarker = mod.FaceLandmarker; FilesetResolver = mod.FilesetResolver;
+    }
+  }catch(e){
+    setStatus('AI 函式庫載入失敗（檢查網路）：'+e.message);
+    throw e;
+  }
+  const fileset = await FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
+  );
+  landmarker = await FaceLandmarker.createFromOptions(fileset, {
+    baseOptions:{
+      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+      delegate:"GPU"
+    },
+    runningMode: mode==='live' ? "VIDEO" : "IMAGE",
+    numFaces:1
+  });
+  setStatus('');
+  return landmarker;
+}
+
+/* ✨ v1: 精確點位定義 + 編號
+   每個 zone 是一個 ordered list of points
+   每個 point: { idx: landmark_index, label: number/string, side: 'L'/'R'/'C' }
+   減少 overlapping 區域 - 每個位置只屬一個 zone
+*/
+/* ✨ v3: PRESETS — 4 風格、每個有自己的 marker positions / colors / sizes
+   架構 = v1 sparse landmark markers (跟臉移動)、不是 v2 全臉色膜
+   每個 preset = {highlight, contour, blush, eyeshadow, lip} 5 個 zone
+*/
+
+// 共用 landmark positions (避免重複)
+// ✨ v3.1: 加入 pro-grade highlight 位置（對齊 Korean tutorial IMG_0854-0859）
+const POS = {
+  // ─── HIGHLIGHT 提亮 ───
+  noseBridge:    [6, 197, 195, 5, 4],               // 鼻樑 vertical
+  philtrum:      [164, 0],                          // 人中 V 字
+  chinHorizontal:[194, 201, 200, 421, 418],         // 下巴橫線
+  // ★ NEW v3.1: 大三角眼下提亮（pro 都標、beginner 漏）
+  underEyeTriangleL: [133, 112, 47, 100, 119, 230, 232, 244],  // 左眼下大三角
+  underEyeTriangleR: [362, 341, 277, 329, 348, 450, 452, 464], // 右眼下大三角
+  // ★ NEW v3.1: 眉骨下方提亮（pro 必有）
+  browBoneL:     [55, 65, 52, 53],
+  browBoneR:     [285, 295, 282, 283],
+  // ★ NEW v3.1: 額頭 T 字中央提亮
+  foreheadCenter: [10, 151, 9, 8, 168],
+  // 蘋果肌高點提亮（已有但保留作 alt）
+  cheekHighL:    [205, 50, 187],
+  cheekHighR:    [425, 280, 411],
+  innerEyeL:     [133],
+  innerEyeR:     [362],
+
+  // ─── CONTOUR / SHADOW 修容 ───
+  cheekboneSweepL: [234, 93, 132, 58, 50],
+  cheekboneSweepR: [454, 323, 361, 288, 280],
+  jawL:          [172, 136, 150, 149],
+  jawR:          [397, 365, 379, 378],
+  noseSideL:     [193, 122, 196, 198],
+  noseSideR:     [417, 351, 419, 420],
+  templeL:       [21, 54, 103],
+  templeR:       [251, 284, 332],
+  // ★ NEW v3.1: 髮際線 shadow（pro 用來壓縮額頭高度）
+  hairlineShadow: [10, 338, 297, 332, 109, 67, 103],
+
+  // ─── BLUSH 腮紅 ───
+  appleL_big:    [117, 118, 119, 47, 100],
+  appleR_big:    [346, 347, 348, 277, 329],
+  appleL_small:  [50, 205],
+  appleR_small:  [280, 425],
+
+  // ─── EYESHADOW 眼影 ───
+  upperLidL:     [27, 28, 29, 30, 56, 190],
+  upperLidR:     [257, 258, 259, 260, 286, 414],
+  outerLidL:     [33, 7, 163],
+  outerLidR:     [263, 249, 390],
+
+  // ─── LIP 唇 ───
+  lipsCenter:    [13, 14, 0, 17],
+  lipsOuter:     [61, 291, 0, 17],
+};
+
+const PRESETS = {
+  sweet: {
+    name: '🍑 韓系暖粉 sparkle',
+    desc: '暖粉 + 卧蠶 + 染唇 + 暖棕煙燻外眼角 + pro-grade highlight',
+    zones: {
+      highlight: { color: '#7fd1e0', label: '提亮 (pro)', strokes: [
+        // pro core (Korean tutorial reference)
+        { pts: POS.underEyeTriangleL, width: 0.045, fill: 'oval' },  // ★ 大三角眼下
+        { pts: POS.underEyeTriangleR, width: 0.045, fill: 'oval' },
+        { pts: POS.foreheadCenter, width: 0.022 },                    // 額頭 T 字
+        { pts: POS.browBoneL, width: 0.012 },                         // 眉骨
+        { pts: POS.browBoneR, width: 0.012 },
+        { pts: POS.noseBridge, width: 0.018 },                        // 鼻樑
+        { pts: POS.philtrum, width: 0.010 },                          // 人中
+        { pts: POS.chinHorizontal, width: 0.018 },                    // 下巴
+        { pts: POS.cheekHighL, width: 0.025, fill: 'oval' },          // 蘋果肌高點
+        { pts: POS.cheekHighR, width: 0.025, fill: 'oval' },
+      ]},
+      contour: { color: '#c98fe8', label: '修容', strokes: [
+        { pts: POS.cheekboneSweepL, width: 0.022 },
+        { pts: POS.cheekboneSweepR, width: 0.022 },
+        { pts: POS.noseSideL, width: 0.010 },
+        { pts: POS.noseSideR, width: 0.010 },
+        { pts: POS.hairlineShadow, width: 0.018 },                    // ★ NEW 髮際 shadow
+        { pts: POS.jawL, width: 0.014 },
+        { pts: POS.jawR, width: 0.014 },
+      ]},
+      blush: { color: '#e8a0b8', label: '腮紅', strokes: [
+        { pts: POS.appleL_big, width: 0.075, fill: 'oval' },
+        { pts: POS.appleR_big, width: 0.075, fill: 'oval' },
+      ]},
+      eyeshadow: { color: '#d4a890', label: '眼影 (暖棕)', strokes: [
+        { pts: POS.upperLidL, width: 0.018 },
+        { pts: POS.upperLidR, width: 0.018 },
+        { pts: POS.outerLidL, width: 0.015 },
+        { pts: POS.outerLidR, width: 0.015 },
+      ]},
+      lip: { color: '#d76a78', label: '唇 (染唇粉橘)', strokes: [
+        { pts: POS.lipsCenter, width: 0.022, fill: 'oval' },
+      ]},
+    },
+  },
+  bold: {
+    name: '🍓 染唇暖橘紅',
+    desc: 'coral-red 染唇 + 棕煙燻眼皮 + 微卧蠶 + pro-grade highlight + 裸感肌',
+    zones: {
+      highlight: { color: '#7fd1e0', label: '提亮 (pro)', strokes: [
+        { pts: POS.underEyeTriangleL, width: 0.040, fill: 'oval' },
+        { pts: POS.underEyeTriangleR, width: 0.040, fill: 'oval' },
+        { pts: POS.foreheadCenter, width: 0.018 },
+        { pts: POS.noseBridge, width: 0.014 },
+        { pts: POS.cheekHighL, width: 0.022, fill: 'oval' },
+        { pts: POS.cheekHighR, width: 0.022, fill: 'oval' },
+      ]},
+      contour: { color: '#c98fe8', label: '修容', strokes: [
+        { pts: POS.cheekboneSweepL, width: 0.018 },
+        { pts: POS.cheekboneSweepR, width: 0.018 },
+        { pts: POS.noseSideL, width: 0.012 },
+        { pts: POS.noseSideR, width: 0.012 },
+        { pts: POS.hairlineShadow, width: 0.016 },
+        { pts: POS.jawL, width: 0.014 },
+        { pts: POS.jawR, width: 0.014 },
+      ]},
+      blush: { color: '#e8a0b8', label: '腮紅 (極淡)', strokes: [
+        { pts: POS.appleL_small, width: 0.045, fill: 'oval' },
+        { pts: POS.appleR_small, width: 0.045, fill: 'oval' },
+      ]},
+      eyeshadow: { color: '#9a6856', label: '眼影 (深棕煙燻)', strokes: [
+        { pts: POS.upperLidL, width: 0.022 },
+        { pts: POS.upperLidR, width: 0.022 },
+        { pts: POS.outerLidL, width: 0.020 },
+        { pts: POS.outerLidR, width: 0.020 },
+      ]},
+      lip: { color: '#d75850', label: '唇 (coral 染唇)', strokes: [
+        { pts: POS.lipsCenter, width: 0.028, fill: 'oval' },
+      ]},
+    },
+  },
+  kpop: {
+    name: '❄️ 韓系冷淡',
+    desc: '冷膚色 + 玻璃肌 + 淡腮紅 + 直平眉 + 霧面豆沙唇 + pro-grade glow',
+    zones: {
+      highlight: { color: '#7fd1e0', label: '提亮 (玻璃肌 pro)', strokes: [
+        // K-pop glass skin = 最強 highlight 涵蓋
+        { pts: POS.underEyeTriangleL, width: 0.050, fill: 'oval' },
+        { pts: POS.underEyeTriangleR, width: 0.050, fill: 'oval' },
+        { pts: POS.foreheadCenter, width: 0.025 },
+        { pts: POS.browBoneL, width: 0.014 },
+        { pts: POS.browBoneR, width: 0.014 },
+        { pts: POS.noseBridge, width: 0.020 },
+        { pts: POS.cheekHighL, width: 0.030, fill: 'oval' },
+        { pts: POS.cheekHighR, width: 0.030, fill: 'oval' },
+        { pts: POS.philtrum, width: 0.010 },
+        { pts: POS.chinHorizontal, width: 0.016 },
+      ]},
+      contour: { color: '#c98fe8', label: '修容 (極淡)', strokes: [
+        { pts: POS.cheekboneSweepL, width: 0.015 },
+        { pts: POS.cheekboneSweepR, width: 0.015 },
+        { pts: POS.noseSideL, width: 0.010 },
+        { pts: POS.noseSideR, width: 0.010 },
+      ]},
+      blush: { color: '#d99fae', label: '腮紅 (冷玫瑰)', strokes: [
+        { pts: POS.appleL_small, width: 0.050, fill: 'oval' },
+        { pts: POS.appleR_small, width: 0.050, fill: 'oval' },
+      ]},
+      eyeshadow: { color: '#c0a090', label: '眼影 (淺奶茶)', strokes: [
+        { pts: POS.upperLidL, width: 0.015 },
+        { pts: POS.upperLidR, width: 0.015 },
+      ]},
+      lip: { color: '#b06870', label: '唇 (霧面豆沙)', strokes: [
+        { pts: POS.lipsCenter, width: 0.022, fill: 'oval' },
+      ]},
+    },
+  },
+  bare: {
+    name: '💧 素顏感',
+    desc: '健康自然、不顯妝、但保留 pro-grade 淡淡提亮',
+    zones: {
+      highlight: { color: '#7fd1e0', label: '提亮 (極輕)', strokes: [
+        { pts: POS.underEyeTriangleL, width: 0.030, fill: 'oval' },
+        { pts: POS.underEyeTriangleR, width: 0.030, fill: 'oval' },
+        { pts: POS.noseBridge, width: 0.012 },
+        { pts: POS.cheekHighL, width: 0.018, fill: 'oval' },
+        { pts: POS.cheekHighR, width: 0.018, fill: 'oval' },
+      ]},
+      contour: { color: '#c98fe8', label: '修容 (跳過)', strokes: [
+        // 素顏感 = 沒有修容
+      ]},
+      blush: { color: '#e8b3a8', label: '腮紅 (手指點)', strokes: [
+        { pts: POS.appleL_small, width: 0.045, fill: 'oval' },
+        { pts: POS.appleR_small, width: 0.045, fill: 'oval' },
+      ]},
+      eyeshadow: { color: '#cfa897', label: '眼影 (跳過)', strokes: [
+        // 素顏感 = 跳過眼影
+      ]},
+      lip: { color: '#d08879', label: '唇 (透明潤唇)', strokes: [
+        { pts: POS.lipsCenter, width: 0.018, fill: 'oval' },
+      ]},
+    },
+  },
+};
+
+// 當前 active preset (mutable)
+let activePreset = 'sweet';
+// Compat: 舊 code 讀 ZONES、轉 proxy 到 active preset 的 zones
+const ZONES = new Proxy({}, {
+  get(_, key) { return PRESETS[activePreset].zones[key]; }
+});
+
+/* ✨ v1.3: STROKE / AREA rendering — 整片完整 application zone */
+
+// ✨ v1.4: 用 path stroke + shadow blur, 透明度 match 腮紅 level
+// 一次 draw, 不是 30 overlapping circles (太密)
+function drawStroke(ctx, lm, pts, color, widthRatio, w, h){
+  const width = Math.max(w, h) * widthRatio;
+  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
+  if (coords.length < 1) return;
+
+  if (coords.length === 1) {
+    // Single point: small radial gradient
+    const x = coords[0].x, y = coords[0].y;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
+    grad.addColorStop(0, color + '66');  // ~40% (was 'aa' 67%)
+    grad.addColorStop(0.5, color + '22');
+    grad.addColorStop(1, color + '00');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, width, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
+
+  // Multi-point path: use lineWidth + shadow blur for soft edge
+  ctx.save();
+  ctx.strokeStyle = color + '55'; // ~33% alpha (match blush)
+  ctx.lineWidth = width * 1.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowColor = color;
+  ctx.shadowBlur = width * 1.2;
+  ctx.beginPath();
+  coords.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Draw oval (for blush apple cheek)
+function drawOval(ctx, lm, pts, color, widthRatio, w, h){
+  const width = Math.max(w, h) * widthRatio;
+  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
+  if (coords.length === 0) return;
+  // Center = average of points
+  const cx = coords.reduce((a, p) => a + p.x, 0) / coords.length;
+  const cy = coords.reduce((a, p) => a + p.y, 0) / coords.length;
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, width);
+  grad.addColorStop(0, color + 'bb');
+  grad.addColorStop(0.5, color + '55');
+  grad.addColorStop(1, color + '00');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, width, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawOverlay(ctx, lm, w, h){
+  // v3: All 5 layers for active preset
+  const ALL_LAYERS = ['contour', 'eyeshadow', 'blush', 'highlight', 'lip'];
+  let zonesToDraw = [];
+  if (activeZone === 'all') {
+    zonesToDraw = ALL_LAYERS;
+  } else if (activeZone === 'step') {
+    zonesToDraw = [stepOrder[currentStep]];
+  } else {
+    zonesToDraw = [activeZone];
+  }
+
+  // STROKES not points
+  for (const key of zonesToDraw) {
+    const z = ZONES[key];
+    if (!z || !z.strokes) continue;
+    for (const stroke of z.strokes) {
+      if (stroke.fill === 'oval') {
+        drawOval(ctx, lm, stroke.pts, z.color, stroke.width, w, h);
+      } else {
+        drawStroke(ctx, lm, stroke.pts, z.color, stroke.width, w, h);
+      }
+    }
+  }
+
+  // Top-left banner: 當前 preset name + step info
+  const fontSize = Math.max(w, h) * 0.022;
+  ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#fff';
+  ctx.fillText(PRESETS[activePreset].name, 16, 16);
+  if (activeZone === 'step') {
+    const zKey = stepOrder[currentStep];
+    const z = ZONES[zKey];
+    ctx.fillStyle = z?.color || '#fff';
+    ctx.fillText(`Step ${currentStep + 1}/${stepOrder.length}: ${z?.label || zKey}`, 16, 16 + fontSize * 1.3);
+  }
+  ctx.shadowBlur = 0;
+}
+
+/* ✨ v1.3: 上妝後預覽 — 用 stroke paths + blend modes 模擬實際效果 */
+function drawStrokeWithColor(ctx, lm, pts, rgbaInner, rgbaMid, rgbaOuter, widthRatio, w, h){
+  const width = Math.max(w, h) * widthRatio;
+  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
+  if (coords.length < 1) return;
+  const steps = 30;
+  for (let i = 0; i < coords.length - 1; i++) {
+    const a = coords[i], b = coords[i+1];
+    for (let s = 0; s <= steps; s++) {
+      const t = s / steps;
+      const x = a.x + (b.x - a.x) * t;
+      const y = a.y + (b.y - a.y) * t;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
+      grad.addColorStop(0, rgbaInner);
+      grad.addColorStop(0.5, rgbaMid);
+      grad.addColorStop(1, rgbaOuter);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, width, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (coords.length === 1) {
+    const x = coords[0].x, y = coords[0].y;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
+    grad.addColorStop(0, rgbaInner);
+    grad.addColorStop(0.5, rgbaMid);
+    grad.addColorStop(1, rgbaOuter);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, width, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function drawMakeupPreview(ctx, lm, w, h){
+  // ─── 修容 (Contour) — 'multiply' 加深 ───
+  ctx.globalCompositeOperation = 'multiply';
+  ZONES.contour.strokes.forEach(s => {
+    drawStrokeWithColor(ctx, lm, s.pts,
+      'rgba(150,110,90,0.35)', 'rgba(150,110,90,0.15)', 'rgba(150,110,90,0)',
+      s.width, w, h);
+  });
+
+  // ─── 提亮 (Highlight) — 'screen' 提亮 ───
+  ctx.globalCompositeOperation = 'screen';
+  ZONES.highlight.strokes.forEach(s => {
+    drawStrokeWithColor(ctx, lm, s.pts,
+      'rgba(255,235,200,0.45)', 'rgba(255,235,200,0.2)', 'rgba(255,235,200,0)',
+      s.width, w, h);
+  });
+
+  // ─── 腮紅 (Blush) — 'overlay' 紅暈 ───
+  ctx.globalCompositeOperation = 'overlay';
+  ZONES.blush.strokes.forEach(s => {
+    const width = Math.max(w, h) * s.width;
+    const coords = s.pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
+    if (coords.length === 0) return;
+    const cx = coords.reduce((a, p) => a + p.x, 0) / coords.length;
+    const cy = coords.reduce((a, p) => a + p.y, 0) / coords.length;
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, width);
+    grad.addColorStop(0, 'rgba(255,140,150,0.5)');
+    grad.addColorStop(0.5, 'rgba(255,140,150,0.2)');
+    grad.addColorStop(1, 'rgba(255,140,150,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, width, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'source-over';
+
+  const numSize = Math.max(w, h) * 0.018;
+  ctx.fillStyle = '#fff';
+  ctx.font = `bold ${numSize * 1.3}px -apple-system, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.shadowColor = 'rgba(0,0,0,0.6)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('✨ 上妝後預覽 (估計效果)', 20, 20);
+  ctx.shadowBlur = 0;
+}
+
+function sampleSkin(ctx, lm, w, h){
+  const idxs=[50,280,10,151];
+  let r=0,g=0,b=0,n=0;
+  for(const i of idxs){
+    const p=lm[i]; if(!p)continue;
+    const d=ctx.getImageData(Math.round(p.x*w),Math.round(p.y*h),1,1).data;
+    r+=d[0];g+=d[1];b+=d[2];n++;
+  }
+  r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
+  const hex='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+  const undertone = (r>b+12)?'暖調 (warm)':(b>r+4)?'冷調 (cool)':'中性 (neutral)';
+  return {hex,undertone,r,g,b};
+}
+
+function faceShape(lm){
+  const D=(a,b)=>Math.hypot(lm[a].x-lm[b].x, lm[a].y-lm[b].y);
+  const len=D(10,152), wid=D(234,454), jaw=D(172,397), fore=D(54,284);
+  const ratio=len/wid;
+  let shape;
+  if(ratio>1.5) shape='長型 / 鵝蛋偏長';
+  else if(ratio<1.2) shape='圓型 / 短';
+  else if(jaw>fore*1.05) shape='方型 / 下顎較寬';
+  else if(fore>jaw*1.15) shape='心型 / 額寬下巴尖';
+  else shape='鵝蛋型（標準）';
+  return {shape, ratio:ratio.toFixed(2)};
+}
+
+function adviceFor(shape, undertone){
+  const a=[];
+  if(shape.includes('長')) a.push('臉偏長：<b>髮際線與下巴橫向</b>打陰影壓縮長度，腮紅<b>橫掃</b>不要往下。');
+  else if(shape.includes('圓')) a.push('臉偏圓：<b>顴骨下方斜向</b>修容拉出立體，提亮集中鼻樑與額頭中央拉長。');
+  else if(shape.includes('方')) a.push('下顎較寬：<b>下顎角</b>柔化陰影，腮紅打在蘋果肌偏上往太陽穴帶。');
+  else if(shape.includes('心')) a.push('額寬下巴尖：<b>額頭兩側</b>輕修容，下巴可微提亮平衡。');
+  else a.push('鵝蛋型百搭：顴骨下方自然修容 + 三角區提亮即可。');
+  a.push('<b>順序</b>：先打提亮 (藍 1→5) → 再修容 (紫 1→4) → 最後腮紅 (粉)。每層輕拍暈開。');
+  if(undertone.includes('暖')) a.push('你偏暖調：高光選<b>香檳金</b>、腮紅選<b>蜜桃/珊瑚</b>、修容選<b>暖棕</b>。');
+  else if(undertone.includes('冷')) a.push('你偏冷調：高光選<b>冷白/銀光</b>、腮紅選<b>玫瑰/莓粉</b>、修容選<b>灰棕</b>。');
+  else a.push('你偏中性調：暖冷色號大多可駕馭，依當天造型選即可。');
+  return a;
+}
+
+function showResults(skin, fs){
+  $('results').classList.remove('hidden');
+  $('presets').classList.remove('hidden');
+  $('layers').classList.remove('hidden');
+  updateLegend();
+  $('swatch').style.background=skin.hex;
+  $('hex').textContent=skin.hex.toUpperCase();
+  $('undertone').textContent=skin.undertone;
+  $('faceshape').textContent=fs.shape;
+  $('ratio').textContent=fs.ratio;
+  $('advice').innerHTML=adviceFor(fs.shape,skin.undertone).map(t=>`<li>${t}</li>`).join('');
+}
+
+/* ✨ v1: 重繪 (when switching layers) */
+function redraw(){
+  if (!lastLandmarks || !lastImageSize) return;
+  const {w, h} = lastImageSize;
+  if (mode === 'upload') {
+    // 重新 load 原圖 + redraw overlay
+    const img = lastImageSize.img;
+    if (img) {
+      uctx.clearRect(0, 0, w, h);
+      uctx.drawImage(img, 0, 0, w, h);
+      drawOverlay(uctx, lastLandmarks, w, h);
+    }
+  }
+  // Live mode 會在 loop 自動 redraw
+}
+
+/* v3: Preset chip switching */
+document.querySelectorAll('#presets button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#presets button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    activePreset = btn.dataset.preset;
+    updateLegend();
+    if (stepMode) {
+      currentStep = 0;
+      updateStepUI();
+    }
+    redraw();
+  };
+});
+
+/* v3: Update legend to reflect active preset's colors */
+function updateLegend(){
+  const z = PRESETS[activePreset].zones;
+  const legend = document.querySelector('.legend');
+  if (!legend) return;
+  legend.innerHTML = `
+    <span><i class="dot" style="background:${z.highlight.color}"></i>提亮</span>
+    <span><i class="dot" style="background:${z.contour.color}"></i>修容</span>
+    <span><i class="dot" style="background:${z.blush.color}"></i>腮紅</span>
+    <span><i class="dot" style="background:${z.eyeshadow.color}"></i>眼影</span>
+    <span><i class="dot" style="background:${z.lip.color}"></i>唇</span>
+    <span style="color:var(--rose);font-weight:600;">→ ${PRESETS[activePreset].desc}</span>
+  `;
+}
+
+/* Layer toggle (which zone to see) */
+document.querySelectorAll('#layers button').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('#layers button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    activeZone = btn.dataset.zone;
+
+    if (activeZone === 'step') {
+      stepMode = true;
+      currentStep = 0;
+      $('stepbar').classList.add('show');
+      updateStepUI();
+    } else {
+      stepMode = false;
+      $('stepbar').classList.remove('show');
+    }
+
+    redraw();
+  };
+});
+
+function updateStepUI() {
+  const zKey = stepOrder[currentStep];
+  const d = stepDetails[zKey] || {
+    why: `${stepNames[zKey]} — ${PRESETS[activePreset].name} 風格`,
+    tool: '依產品說明',
+    product: '依 preset 推薦色',
+    color: PRESETS[activePreset].zones[zKey]?.label || zKey,
+    apply: [`沿著畫面上標亮的點位畫上 ${stepNames[zKey]}`],
+    technique: '⚠️ 少量多次、可加不可減',
+    blend: '輕拍暈染、不留硬邊',
+    timeMin: 2, timeMax: 5,
+  };
+  $('stepNum').textContent = currentStep + 1;
+  $('stepName').textContent = stepNames[zKey];
+  $('prevStep').disabled = currentStep === 0;
+  $('nextStep').disabled = currentStep === stepOrder.length - 1;
+
+  $('stepDetail').innerHTML = `
+    <div class="why">💡 ${d.why}</div>
+    <div class="row"><div class="label">工具</div><div class="val">${d.tool}</div></div>
+    <div class="row"><div class="label">產品</div><div class="val">${d.product}</div></div>
+    <div class="row"><div class="label">色號</div><div class="val">${d.color}</div></div>
+    <div class="row"><div class="label">時間</div><div class="val">${d.timeMin}-${d.timeMax} 分鐘</div></div>
+    <div style="margin-top:8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">上妝步驟</div>
+    <ul class="apply-list">
+      ${d.apply.map(s => `<li>${s}</li>`).join('')}
+    </ul>
+    <div class="tip">${d.technique}</div>
+    <div class="blend">🌫️ 暈染：${d.blend}</div>
+  `;
+}
+
+$('prevStep').onclick = () => {
+  if (currentStep > 0) {
+    currentStep--;
+    updateStepUI();
+    redraw();
+  }
+};
+$('nextStep').onclick = () => {
+  if (currentStep < stepOrder.length - 1) {
+    currentStep++;
+    updateStepUI();
+    redraw();
+  }
+};
+
+const uploadCanvas=$('uploadCanvas'), uctx=uploadCanvas.getContext('2d',{willReadFrequently:true});
+$('uploadBtn').onclick=()=>$('file').click();
+$('file').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  const img=new Image();
+  img.onload=async()=>{
+    await initModel();
+    setStatus('分析中…',true);
+    const W=img.naturalWidth, H=img.naturalHeight;
+    uploadCanvas.width=W; uploadCanvas.height=H;
+    uctx.drawImage(img,0,0,W,H);
+    const res=await landmarker.detect(img);
+    if(!res.faceLandmarks?.length){ setStatus('沒偵測到臉，換一張正面、清楚的照片試試'); return; }
+    const lm=res.faceLandmarks[0];
+    lastLandmarks = lm;
+    lastImageSize = { w: W, h: H, img: img };
+    const skin=sampleSkin(uctx,lm,W,H);
+    drawOverlay(uctx,lm,W,H);
+    showResults(skin, faceShape(lm));
+    $('hint').classList.add('hidden');
+    uploadCanvas.classList.remove('hidden');
+    setStatus('完成 ✓ 點上方按鈕切換顯示層');
+  };
+  img.src=URL.createObjectURL(f);
+};
+
+const video=$('video'), liveCanvas=$('liveCanvas'), lctx=liveCanvas.getContext('2d',{willReadFrequently:true});
+$('camBtn').onclick=async()=>{
+  await initModel();
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
+  }catch(err){ setStatus('無法開啟鏡頭：'+err.message+'（手機需 https 網址才給鏡頭權限）'); return; }
+  video.srcObject=stream; await video.play();
+  video.classList.remove('hidden'); liveCanvas.classList.remove('hidden'); $('hint').classList.add('hidden');
+  $('camBtn').classList.add('hidden'); $('snapBtn').classList.remove('hidden');
+  $('layers').classList.remove('hidden');
+  setStatus('鏡頭運作中 · 點上方按鈕切換顯示層');
+  loop();
+};
+function loop(){
+  if(mode!=='live'||!stream)return;
+  const W=video.videoWidth, H=video.videoHeight;
+  if(W){
+    liveCanvas.width=W; liveCanvas.height=H;
+    lctx.clearRect(0,0,W,H);
+    const res=landmarker.detectForVideo(video, performance.now());
+    if(res.faceLandmarks?.length){
+      lastLandmarks = res.faceLandmarks[0];
+      lastImageSize = { w: W, h: H };
+      drawOverlay(lctx,res.faceLandmarks[0],W,H);
+    }
+  }
+  rafId=requestAnimationFrame(loop);
+}
+$('snapBtn').onclick=()=>{
+  const W=video.videoWidth,H=video.videoHeight;
+  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
+  const tc=tmp.getContext('2d',{willReadFrequently:true});
+  tc.drawImage(video,0,0,W,H);
+  const res=landmarker.detectForVideo(video,performance.now());
+  if(res.faceLandmarks?.length){
+    const lm=res.faceLandmarks[0];
+    const skin=sampleSkin(tc,lm,W,H);
+    showResults(skin, faceShape(lm));
+    setStatus('已凍結這一格並分析 ✓');
+  }
+};
+
+function stopCam(){ if(rafId)cancelAnimationFrame(rafId); if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} }
+$('mUpload').onclick=()=>switchMode('upload');
+$('mLive').onclick=()=>switchMode('live');
+async function switchMode(m){
+  if(m===mode)return; mode=m; landmarker=null;
+  $('mUpload').classList.toggle('on',m==='upload');
+  $('mLive').classList.toggle('on',m==='live');
+  $('uploadBtn').classList.toggle('hidden',m!=='upload');
+  $('camBtn').classList.toggle('hidden',m!=='live');
+  $('snapBtn').classList.add('hidden');
+  ['video','liveCanvas','uploadCanvas'].forEach(id=>$(id).classList.add('hidden'));
+  $('layers').classList.add('hidden');
+  $('stepbar').classList.remove('show');
+  $('hint').classList.remove('hidden');
+  $('hint').innerHTML = m==='live'
+    ? '點 <b>開鏡頭</b> → 用前鏡頭照自己<br>即時看到該打哪裡（手機需 https）'
+    : '點 <b>選一張臉照</b><br>正面、光線均勻效果最好';
+  $('results').classList.add('hidden');
+  stopCam(); setStatus('');
+}
+setStatus('準備好了 · 選一張臉照開始');
+</script>
+</body>
+</html>

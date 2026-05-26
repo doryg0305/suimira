@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+._*
+
+# Editors
+.vscode/
+.idea/
+
+# Temp
+*.log
+*.tmp
+node_modules/
+
+# Personal (don't push old snapshots/private notes if any)
+# (snapshots/ kept public — version history is useful)

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suimira — Live AR Makeup Mirror for Asian Faces</title>
+<meta name="description" content="Live AR makeup mirror for Asian faces. Bring a filtered selfie of how you want to look — Suimira shows step-by-step exactly where to paint each makeup zone.">
+
+<meta property="og:title" content="Suimira — Live AR Makeup Mirror">
+<meta property="og:description" content="Reverse-engineering filter target → real makeup steps. Asian-first. Built solo with Claude.">
+<meta property="og:type" content="website">
+
+<style>
+  :root{
+    --bg:#1a0f1e; --bg2:#251a2a; --bg3:#2f2235;
+    --ink:#f5e9ed; --muted:#a89aa3; --line:#3a2c3e;
+    --rose:#e8a0b8; --gold:#d4af6f; --hi:#7fd1e0; --contour:#c98fe8;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html, body{
+    background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+    line-height:1.6; min-height:100vh;
+  }
+  .wrap{max-width:760px; margin:0 auto; padding:60px 24px;}
+
+  /* Hero */
+  header{text-align:center; margin-bottom:48px;}
+  .logo{
+    font-size:48px; font-weight:800; letter-spacing:-2px;
+    background:linear-gradient(135deg, var(--rose), var(--gold));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:8px;
+  }
+  .tagline{font-size:18px; color:var(--muted); letter-spacing:.3px;}
+  .badge{
+    display:inline-block; font-size:11px; color:var(--gold);
+    border:1px solid var(--line); padding:4px 12px; border-radius:999px;
+    margin-top:14px; letter-spacing:.1em;
+  }
+
+  /* Hero pitch */
+  .hero{
+    background:linear-gradient(135deg, var(--bg2), var(--bg3));
+    border:1px solid var(--line); border-radius:20px;
+    padding:32px 28px; margin:32px 0; text-align:center;
+  }
+  .hero h2{
+    font-size:24px; font-weight:600; margin-bottom:16px;
+    color:var(--ink); line-height:1.4;
+  }
+  .hero p{font-size:16px; color:var(--muted);}
+  .hero .em{color:var(--rose); font-weight:600;}
+
+  /* CTA */
+  .cta{
+    display:flex; gap:12px; justify-content:center; margin:32px 0; flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-block; padding:14px 28px; border-radius:12px;
+    text-decoration:none; font-size:14px; font-weight:600; letter-spacing:.05em;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 8px 20px rgba(232,160,184,.2);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--rose), var(--gold));
+    color:#2a1020;
+  }
+  .btn-ghost{
+    background:var(--bg2); color:var(--ink); border:1px solid var(--line);
+  }
+
+  /* Section */
+  section{margin:48px 0;}
+  h3{
+    font-size:13px; text-transform:uppercase; letter-spacing:.15em;
+    color:var(--gold); margin-bottom:16px; font-weight:600;
+  }
+
+  /* Zones grid */
+  .zones{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    gap:12px; margin-top:16px;
+  }
+  .zone{
+    background:var(--bg2); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px;
+  }
+  .zone .dot{
+    display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px;
+    vertical-align:-1px;
+  }
+  .zone .name{font-size:14px; color:var(--ink); font-weight:600;}
+  .zone .desc{font-size:12px; color:var(--muted); margin-top:4px; line-height:1.5;}
+
+  /* How it differs */
+  .compare{
+    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
+    padding:20px 22px;
+  }
+  .compare .row{display:flex; align-items:flex-start; gap:14px; margin:10px 0; font-size:14px;}
+  .compare .other{color:var(--muted); flex:1;}
+  .compare .ours{color:var(--rose); flex:1; font-weight:500;}
+  .compare .other:before{content:"They:"; display:block; font-size:10px; letter-spacing:.1em;
+    color:var(--muted); text-transform:uppercase; margin-bottom:2px;}
+  .compare .ours:before{content:"Suimira:"; display:block; font-size:10px; letter-spacing:.1em;
+    color:var(--gold); text-transform:uppercase; margin-bottom:2px;}
+
+  /* Founder */
+  .founder{
+    background:var(--bg2); border:1px solid var(--line); border-radius:16px;
+    padding:24px 26px; margin-top:16px;
+  }
+  .founder .name{font-size:18px; font-weight:700; color:var(--ink); margin-bottom:6px;}
+  .founder .bio{font-size:14px; color:var(--muted); line-height:1.65;}
+  .founder .links{display:flex; gap:14px; margin-top:14px; flex-wrap:wrap;}
+  .founder a{color:var(--hi); text-decoration:none; font-size:13px;}
+  .founder a:hover{text-decoration:underline;}
+
+  /* Waitlist */
+  .waitlist{
+    background:linear-gradient(135deg, var(--rose), var(--gold));
+    color:#2a1020; border-radius:16px; padding:22px 24px; text-align:center;
+  }
+  .waitlist h3{color:#2a1020; opacity:.85;}
+  .waitlist p{font-size:14px; margin:6px 0 14px;}
+  .waitlist .email{font-size:15px; font-weight:600;}
+  .waitlist a{color:#2a1020; text-decoration:underline;}
+
+  footer{
+    text-align:center; margin-top:60px; padding-top:24px;
+    border-top:1px solid var(--line); font-size:12px; color:var(--muted);
+  }
+
+  @media (max-width: 520px){
+    .wrap{padding:40px 18px;}
+    .logo{font-size:36px;}
+    .hero h2{font-size:20px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">Suimira</div>
+    <div class="tagline">A live AR makeup mirror for Asian faces.</div>
+    <span class="badge">v3.2 MVP · MAY 2026</span>
+  </header>
+
+  <div class="hero">
+    <h2>Bring a filtered selfie of how you want to look —<br>
+    <span class="em">Suimira shows you exactly where to paint.</span></h2>
+    <p>Step-by-step makeup placement projected onto your live face. Markers follow you as you turn your head.</p>
+  </div>
+
+  <div class="cta">
+    <a href="./" class="btn btn-primary">▶ Try the live demo</a>
+    <a href="https://github.com/doryg0305/suimira" class="btn btn-ghost">View on GitHub</a>
+  </div>
+
+  <section>
+    <h3>5 makeup zones, live tracking</h3>
+    <div class="zones">
+      <div class="zone">
+        <div class="name"><i class="dot" style="background:#c98fe8;"></i>Contour</div>
+        <div class="desc">Cheekbone sweep, nose wrap, jaw shadow</div>
+      </div>
+      <div class="zone">
+        <div class="name"><i class="dot" style="background:#d4a890;"></i>Eyeshadow</div>
+        <div class="desc">Lid base + outer corner smoky deepen</div>
+      </div>
+      <div class="zone">
+        <div class="name"><i class="dot" style="background:#e8a0b8;"></i>Blush</div>
+        <div class="desc">Apple of cheek, gradient soft</div>
+      </div>
+      <div class="zone">
+        <div class="name"><i class="dot" style="background:#7fd1e0;"></i>Highlight</div>
+        <div class="desc">Under-eye triangle, T-zone, brow bone</div>
+      </div>
+      <div class="zone">
+        <div class="name"><i class="dot" style="background:#d76a78;"></i>Lip</div>
+        <div class="desc">Center gradient, tinted edges</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>How Suimira is different</h3>
+    <div class="compare">
+      <div class="row">
+        <div class="other">Pre-set looks designed by celebrity makeup artists — you follow them.</div>
+        <div class="ours">You bring your own target (a filtered selfie you love) — we reverse-engineer the steps.</div>
+      </div>
+      <div class="row">
+        <div class="other">Virtual try-on: shows the look on your face. Doesn't teach you how to do it.</div>
+        <div class="ours">AR placement markers that follow your face — actual painting practice tool.</div>
+      </div>
+      <div class="row">
+        <div class="other">Western face geometry defaults, Eurocentric beauty bias.</div>
+        <div class="ours">Asian face structure first — under-eye triangle, nose bridge, eyelid type aware.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h3>Built by</h3>
+    <div class="founder">
+      <div class="name">Dory Kuo</div>
+      <div class="bio">
+        UCLA Cognitive Science (GPA 3.72) → cancer research at UCLA David Geffen School of Medicine → Operations &amp; Growth Analyst at Generation Next Fertility (Manhattan IVF clinic). Currently founding Suimira (Aug 2025 – present), built solo using Claude (Anthropic) as engineering proxy. Relocating to SF Bay Area June 27, 2026.
+      </div>
+      <div class="links">
+        <a href="https://www.linkedin.com/in/dory-kuo/" target="_blank">LinkedIn</a>
+        <a href="https://github.com/doryg0305/suimira" target="_blank">GitHub</a>
+        <a href="mailto:doryg0305@gmail.com">Email</a>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="waitlist">
+      <h3>Get on the waitlist</h3>
+      <p>v3.2 MVP runs in any browser. v4 (mobile + filter target upload) coming soon.</p>
+      <p class="email">Email <a href="mailto:doryg0305@gmail.com?subject=Suimira%20waitlist">doryg0305@gmail.com</a> with subject "Suimira waitlist" to get the first invite.</p>
+    </div>
+  </section>
+
+  <footer>
+    Suimira · Built with MediaPipe, HTML5 Canvas, and Claude · 2026<br>
+    All face processing runs entirely client-side. No photos uploaded, no data stored.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -106,6 +106,15 @@
   }
   nav .nav-links a{ color:inherit; text-decoration:none; transition:opacity .2s; }
   nav .nav-links a:hover{ opacity:.7; }
+  /* v3.28: language toggle button */
+  .lang-toggle{
+    background:transparent; border:1px solid var(--line-soft);
+    color:var(--ink-mid); font-family:'Cormorant Garamond', serif;
+    width:36px; height:36px; border-radius:50%;
+    cursor:pointer; font-size:14px; font-weight:500;
+    transition:all .2s; padding:0;
+  }
+  .lang-toggle:hover{ background:var(--bg-soft); }
 
   /* ── HERO ── */
   .hero{
@@ -318,9 +327,10 @@
       <span class="logo-sub">SUIMIRA</span>
     </div>
     <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#experience">Experience</a>
-      <a href="#about">About</a>
+      <a href="#features" data-en="Features" data-zh="特色">Features</a>
+      <a href="#experience" data-en="Experience" data-zh="體驗">Experience</a>
+      <a href="#about" data-en="About" data-zh="關於">About</a>
+      <button id="lang-toggle" class="lang-toggle" title="Switch language">中</button>
     </div>
   </nav>
 
@@ -328,14 +338,14 @@
   <section class="hero">
     <div class="hero-grid">
       <div class="hero-copy">
-        <p class="eyebrow">Live AR Makeup Mirror</p>
-        <h2 class="serif">Bring the look —<br>we'll show you where to paint.</h2>
-        <p class="sub">
+        <p class="eyebrow" data-en="Live AR Makeup Mirror" data-zh="即時 AR 化妝鏡">Live AR Makeup Mirror</p>
+        <h2 class="serif" data-en-html="Bring the look —<br>we'll show you where to paint." data-zh-html="你想畫的妝 —<br>我們告訴你畫在哪裡。">Bring the look —<br>we'll show you where to paint.</h2>
+        <p class="sub" data-en="A live AR mirror that uses face mesh tracking to show exactly where each makeup zone goes — step-by-step, in real-time, calibrated for Asian face structure." data-zh="即時 AR 鏡子、用 face mesh 追蹤你的臉、一步一步告訴你每個化妝區塊該畫在哪 — 為亞洲臉部結構校準。">
           A live AR mirror that uses face mesh tracking to show exactly where each makeup zone goes — step-by-step, in real-time, calibrated for Asian face structure.
         </p>
         <div class="hero-actions">
-          <a href="mailto:doryg0305@gmail.com?subject=Suimira%20waitlist" class="btn btn-primary">Join Waitlist</a>
-          <a href="./" class="btn btn-ghost">Watch Demo</a>
+          <a href="mailto:doryg0305@gmail.com?subject=Suimira%20waitlist" class="btn btn-primary" data-en="Join Waitlist" data-zh="加入等候名單">Join Waitlist</a>
+          <a href="./" class="btn btn-ghost" data-en="Watch Demo" data-zh="看 Demo">Watch Demo</a>
         </div>
       </div>
 
@@ -382,9 +392,9 @@
         <div class="exp-wordmark-tag">A mirror that understands you.</div>
       </div>
       <div>
-        <p class="eyebrow">How It Works</p>
-        <h2 class="serif">Watch your makeup<br>build up live<br>on your own face.</h2>
-        <p class="sub">
+        <p class="eyebrow" data-en="How It Works" data-zh="運作方式">How It Works</p>
+        <h2 class="serif" data-en-html="Watch your makeup<br>build up live<br>on your own face." data-zh-html="看你的妝<br>一層一層 build up<br>在你自己臉上。">Watch your makeup<br>build up live<br>on your own face.</h2>
+        <p class="sub" data-en="Pick a look (Korean Warm Pink Sparkle, Coral Tinted Lip, K-pop Clean Girl, or Bare-Face Glow). See the markers appear on your face in real time. Step through 6 makeup zones — each step adds a layer until your finished look. No hardware required, all processing runs in your browser." data-zh="選一個妝容 (韓系暖粉 sparkle、染唇暖橘紅、韓系冷淡、素顏感)。即時看到 markers 出現在你臉上。走過 6 個化妝區塊、每步加一層、直到完成。不需硬體、所有運算都在你的瀏覽器跑。">
           Pick a look (Korean Warm Pink Sparkle, Coral Tinted Lip, K-pop Clean Girl, or Bare-Face Glow). See the markers appear on your face in real time. Step through 6 makeup zones — each step adds a layer until your finished look. No hardware required, all processing runs in your browser.
         </p>
       </div>
@@ -395,9 +405,9 @@
   <section id="about" class="cta">
     <div class="cta-card">
       <div class="cta-inner">
-        <h2 class="serif">Learn pro placement —<br>without the YouTube confusion.</h2>
-        <p>Suimira teaches makeup zone placement in real-time AR on your own face. Korean techniques, Asian face calibration, and step-by-step build-up that mirrors real application.</p>
-        <a href="./" class="btn btn-primary">Try the live demo →</a>
+        <h2 class="serif" data-en-html="Learn pro placement —<br>without the YouTube confusion." data-zh-html="學專業位置 —<br>不再被 YouTube 教學搞混。">Learn pro placement —<br>without the YouTube confusion.</h2>
+        <p data-en="Suimira teaches makeup zone placement in real-time AR on your own face. Korean techniques, Asian face calibration, and step-by-step build-up that mirrors real application." data-zh="Suimira 即時 AR 教你每個化妝區塊的位置、在你自己臉上看。韓系技法、亞洲臉部校準、逐步 build-up 跟真正化妝順序一樣。">Suimira teaches makeup zone placement in real-time AR on your own face. Korean techniques, Asian face calibration, and step-by-step build-up that mirrors real application.</p>
+        <a href="./" class="btn btn-primary" data-en="Try the live demo →" data-zh="試試 live demo →">Try the live demo →</a>
       </div>
     </div>
   </section>
@@ -412,6 +422,36 @@
   </footer>
 
 </main>
+
+<script>
+  // v3.28: EN / 中 language toggle
+  (function(){
+    const btn = document.getElementById('lang-toggle');
+    if (!btn) return;
+    function setLang(lang){
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const val = el.getAttribute('data-' + lang);
+        if (val !== null) el.textContent = val;
+      });
+      document.querySelectorAll('[data-en-html]').forEach(el => {
+        const val = el.getAttribute('data-' + lang + '-html');
+        if (val !== null) el.innerHTML = val;
+      });
+      btn.textContent = lang === 'en' ? '中' : 'EN';
+      document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
+      try { localStorage.setItem('suimira-lang', lang); } catch(e){}
+    }
+    const saved = (function(){
+      try { return localStorage.getItem('suimira-lang'); } catch(e){ return null; }
+    })();
+    let current = saved || 'en';
+    setLang(current);
+    btn.addEventListener('click', () => {
+      current = current === 'en' ? 'zh' : 'en';
+      setLang(current);
+    });
+  })();
+</script>
 
 </body>
 </html>

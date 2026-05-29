@@ -117,8 +117,8 @@ let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,
 /* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
 const STEPS=[
  {key:'base',ic:'🩷',name:'底妝 · 皮膚先好起來',where:'全臉勻底妝、輕提亮——<b>皮膚先乾淨透亮</b>，後面才好看',sku:'Dior 超完美柔光粉底',mode:'base'},
- {key:'contour',ic:'🤎',name:'修容',where:'顴骨下緣，從<b>耳朵側往嘴角斜掃</b>、上重下淺（咖啡棕、不是黑）',sku:'咖啡棕修容',mode:'sweep',
-   L:[234,93,132,58,50],R:[454,323,361,288,280],color:'#9c7256'},
+ {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
+   L:[234,117,205,187],R:[454,346,425,411],color:'#9c7256'},
  {key:'highlight',ic:'✨',name:'打亮（這個 look 的主角）',where:'<b>鼻樑由上往下細掃</b> + 顴骨高點點開，用光做立體',sku:'OFRA Highlighter Cloud9',mode:'sweep',
    L:[6,197,195,5,4],R:[6,197,195,5,4],color:'#f0d9b8'},
  {key:'blush',ic:'🌷',name:'腮紅（高位 + 橫過鼻樑）',where:'蘋果肌<b>偏高</b>往太陽穴斜掃、再<b>輕橫過鼻樑</b> → 戀愛感',sku:'Dior 001 + Clinique Pink Pop',mode:'sweep',
@@ -175,7 +175,7 @@ function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,
 function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
 function sweep(x,lm,idx,color,w,h){
   const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*0.5,rad=R*0.05*(1-t*0.4);
+  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*0.4,rad=R*0.04*(1-t*0.4);
     const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
     g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
     x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
@@ -188,12 +188,14 @@ function brush(x,lm,idx,color,w,h){
   x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
   x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
   x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.02,0,7);x.fill(); // 起點=重
-  const r=R*0.036;
-  x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=R*0.014;
+  const r=R*0.022;
+  x.globalAlpha=.72; // 半透明，透出臉、不蓋眼睛
+  x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=R*0.008;
   x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.shadowBlur=0;
   x.fillStyle=color;x.beginPath();x.arc(p.x,p.y,r*0.5,0,7);x.fill();
-  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.98)'; // 方向箭頭
-  x.beginPath();x.moveTo(r*1.15,0);x.lineTo(r*0.45,-r*0.55);x.lineTo(r*0.45,r*0.55);x.closePath();x.fill();
+  x.globalAlpha=1;
+  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.9)'; // 方向箭頭
+  x.beginPath();x.moveTo(r*1.0,0);x.lineTo(r*0.4,-r*0.5);x.lineTo(r*0.4,r*0.5);x.closePath();x.fill();
   x.restore();
 }
 const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];

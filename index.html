@@ -114,14 +114,14 @@
       <div class="h">🎉 你完成林襄妝了！</div>
       <div class="sub">覺得怎麼樣？留個想法給 Dory 🤍</div>
       <div class="card" id="fbCard">
-        <div class="stepname" style="font-size:15px;">💬 留 email + 想法</div>
+        <div class="stepname" style="font-size:15px;">💬 留個想法（都選填）</div>
         <div class="where" style="color:var(--muted);margin-bottom:8px;">哪裡喜歡 / 哪裡怪 / 想要什麼功能？</div>
         <form id="fb" action="https://formspree.io/f/mwvzzqay" method="POST">
-          <input type="email" name="email" placeholder="你的 email" required
-            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:8px;background:#fff;">
-          <textarea name="message" rows="3" placeholder="想法 / 建議…"
+          <textarea name="message" rows="3" placeholder="想法 / 建議（選填）…"
             style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;background:#fff;resize:vertical;"></textarea>
-          <button type="submit" class="btn" style="margin-top:8px;">送出回饋 →</button>
+          <input type="text" name="contact" placeholder="暱稱或 email（選填，想被回覆再留）"
+            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:8px;background:#fff;">
+          <button type="submit" class="btn" style="margin-top:8px;">送出 →</button>
         </form>
         <div id="fbOk" class="hidden" style="text-align:center;color:#2e7d32;font-weight:600;padding:10px;">🤍 收到了，謝謝你的回饋！</div>
       </div>

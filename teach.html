@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 你想變成這個 look</title>
+<style>
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
+    --line:#ecdfd4;--card:#fff;--chip:#f6ece4;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;}
+  .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
+  .h{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:500;text-align:center;margin:2px 16px 2px;}
+  .sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
+  .hidden{display:none!important;}
+
+  /* WALL */
+  .wall{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 16px 30px;}
+  .look{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    cursor:pointer;box-shadow:0 3px 12px rgba(150,90,90,.08);transition:transform .15s;}
+  .look:active{transform:scale(.97);}
+  .look img{width:100%;height:160px;object-fit:cover;display:block;background:#eadfd5;}
+  .look .nm{padding:8px 10px;font-size:13px;font-weight:600;}
+  .look .nm small{display:block;color:var(--muted);font-weight:400;font-size:11px;}
+  .look.soon{opacity:.55;}
+  .look.soon .ph{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:#f1e7dd;}
+
+  /* TARGET */
+  .hero{margin:0 16px;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(150,90,90,.18);}
+  .hero img{width:100%;display:block;}
+  .tcta{padding:14px 16px 26px;}
+  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;font-weight:600;font-size:13px;padding:8px;}
+
+  /* TEACH */
+  .stage{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+  .stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .stage video{transform:scaleX(-1);} .stage canvas{transform:scaleX(-1);}
+  .stagehint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;font-size:13px;padding:0 30px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;}
+  .card .stepnum{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em;}
+  .card .stepname{font-size:17px;font-weight:700;margin:2px 0 6px;}
+  .card .where{font-size:13.5px;margin:3px 0;}
+  .card .where b{color:var(--rose);}
+  .card .sku{display:inline-block;margin-top:7px;font-size:11px;background:var(--chip);border:1px solid var(--line);
+    border-radius:20px;padding:3px 10px;color:#7a5a3a;font-weight:600;}
+  .nav{display:flex;gap:10px;padding:0 16px 24px;}
+  .nav button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:13px;padding:13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
+  .nav button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));}
+  .nav button:disabled{opacity:.4;}
+  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 16px 6px;}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;margin-right:6px;vertical-align:-1px;}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">S U I M I R A</div>
+
+  <!-- ===== VIEW 1: WALL ===== -->
+  <div id="vWall">
+    <div class="h">你想變成誰的妝？</div>
+    <div class="sub">選一個 look，我一步步教你畫成這樣</div>
+    <div class="wall">
+      <div class="look" onclick="openLook('linxiang')">
+        <img src="look-linxiang.jpg" alt="林襄">
+        <div class="nm">林襄<small>戀愛氛圍感 · 暖粉水光</small></div>
+      </div>
+      <div class="look soon"><div class="ph">mizuki<br>（即將推出）</div><div class="nm">95_mizuki<small>戀愛感（soon）</small></div></div>
+      <div class="look soon"><div class="ph">+ 你的目標<br>（即將推出）</div><div class="nm">上傳你想要的<small>逆向拆解（soon）</small></div></div>
+      <div class="look soon"><div class="ph">韓系清透<br>（即將推出）</div><div class="nm">Clean Girl<small>soon</small></div></div>
+    </div>
+  </div>
+
+  <!-- ===== VIEW 2: TARGET ===== -->
+  <div id="vTarget" class="hidden">
+    <div class="h">你想變成這個 look</div>
+    <div class="sub" id="tSub">林襄 · 戀愛氛圍感</div>
+    <div class="hero"><img id="tImg" src="look-linxiang.jpg" alt="target"></div>
+    <div class="tcta">
+      <button class="btn" onclick="startTeach()">📸 教我畫成這樣 →</button>
+      <button class="btn ghost" onclick="showWall()">← 換一個 look</button>
+    </div>
+  </div>
+
+  <!-- ===== VIEW 3: TEACH ===== -->
+  <div id="vTeach" class="hidden">
+    <div class="h" style="font-size:18px;">跟著畫 · 林襄戀愛感</div>
+    <div class="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="cv"></canvas>
+      <div class="stagehint" id="hint">點下面開始 → 打開前鏡頭</div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="card">
+      <div class="stepnum" id="sNum">STEP 1 / 8</div>
+      <div class="stepname" id="sName">—</div>
+      <div class="where" id="sWhere">—</div>
+      <span class="sku" id="sSku"></span>
+    </div>
+    <div class="nav">
+      <button id="prev" onclick="step(-1)">‹ 上一步</button>
+      <button id="next" class="primary" onclick="step(1)">下一步 ›</button>
+    </div>
+    <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,lastLm=null;
+
+/* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
+const STEPS=[
+ {key:'base',ic:'🩷',name:'底妝 · 皮膚先好起來',where:'全臉勻底妝、輕提亮——<b>皮膚先乾淨透亮</b>，後面才好看',sku:'Dior 超完美柔光粉底',mode:'base'},
+ {key:'contour',ic:'🤎',name:'修容',where:'顴骨下緣，從<b>耳朵側往嘴角斜掃</b>、上重下淺（咖啡棕、不是黑）',sku:'咖啡棕修容',mode:'sweep',
+   L:[234,93,132,58,50],R:[454,323,361,288,280],color:'#9c7256'},
+ {key:'highlight',ic:'✨',name:'打亮（這個 look 的主角）',where:'<b>鼻樑由上往下細掃</b> + 顴骨高點點開，用光做立體',sku:'OFRA Highlighter Cloud9',mode:'sweep',
+   L:[6,197,195,5,4],R:[6,197,195,5,4],color:'#f0d9b8'},
+ {key:'blush',ic:'🌷',name:'腮紅（高位 + 橫過鼻樑）',where:'蘋果肌<b>偏高</b>往太陽穴斜掃、再<b>輕橫過鼻樑</b> → 戀愛感',sku:'Dior 001 + Clinique Pink Pop',mode:'sweep',
+   L:[117,118,119,47,100],R:[346,347,348,277,329],color:'#ff8fa0'},
+ {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
+   L:[133,145,153],R:[362,374,380],color:'#fff0e0'},
+ {key:'eyeshadow',ic:'🤎',name:'眼影（貼膚暖棕）',where:'眼皮暖棕、<b>往外、往下暈</b>一點接到腮紅、同色系',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
+   L:[27,28,29,30],R:[257,258,259,260],color:'#c9a98a'},
+ {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順著<b>毛流一根一根</b>補、缺的地方補就好——自然平眉、不要框死',sku:'灰棕眉筆/眉粉',mode:'sweep',
+   L:[70,63,105,66,107],R:[336,296,334,293,300],color:'#6a4a34'},
+ {key:'lip',ic:'💋',name:'唇（玫瑰水光）',where:'<b>塗滿全唇</b>、中央點一點唇蜜 → 果凍水光唇',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
+];
+
+/* ---- views ---- */
+function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vTeach').classList.add('hidden');}
+function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vTeach').classList.add('hidden');}
+function stopTeach(){showWall();}
+
+/* ---- MediaPipe ---- */
+async function initModel(){
+  if(landmarker)return landmarker;
+  setStatus('載入 AI 模型中…（第一次幾秒）',true);
+  if(!FaceLandmarker){const m=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");FaceLandmarker=m.FaceLandmarker;FilesetResolver=m.FilesetResolver;}
+  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+  landmarker=await FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numFaces:1});
+  setStatus('');return landmarker;
+}
+function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
+
+async function startTeach(){
+  $('vTarget').classList.add('hidden');$('vTeach').classList.remove('hidden');
+  cur=0;renderCard();
+  try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
+  catch(e){setStatus('開不了相機：'+e.message+'（手機要 HTTPS）');return;}
+  $('video').srcObject=stream;await $('video').play();
+  $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 跟著刷子的方向畫 ✨');
+  loop();
+}
+function stopCam(){if(rafId)cancelAnimationFrame(rafId);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+
+function loop(){
+  if(!stream)return;
+  const v=$('video'),c=$('cv'),x=c.getContext('2d');
+  const W=v.videoWidth,H=v.videoHeight;
+  if(W){c.width=W;c.height=H;x.clearRect(0,0,W,H);
+    const r=landmarker.detectForVideo(v,performance.now());
+    if(r.faceLandmarks&&r.faceLandmarks.length){lastLm=r.faceLandmarks[0];drawGuide(x,lastLm,W,H);}}
+  rafId=requestAnimationFrame(loop);
+}
+
+/* ---- 教學引導渲染：方向掃(重→淺) + 會動的刷子 ---- */
+function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,y:p.y*h}));}
+function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
+function sweep(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*0.5,rad=R*0.05*(1-t*0.4);
+    const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
+    g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
+    x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
+}
+function brush(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  const ph=(performance.now()%1600)/1600,p=along(P,ph);
+  x.save();x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=R*0.005;x.setLineDash([R*0.012,R*0.012]);
+  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
+  x.fillStyle='rgba(255,255,255,.5)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.018,0,7);x.fill(); // 起點=重
+  x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=R*0.01;x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,R*0.024,0,7);x.fill();
+  x.shadowBlur=0;x.fillStyle=color;x.beginPath();x.arc(p.x,p.y,R*0.012,0,7);x.fill();x.restore();
+}
+const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+function drawGuide(x,lm,w,h){
+  const s=STEPS[cur];
+  if(s.mode==='base'){ // 全臉柔提亮示意
+    const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+    const P=pts(lm,O,w,h);if(P.length<6)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
+    x.globalCompositeOperation='soft-light';x.globalAlpha=.5;x.fillStyle='#fff1e4';x.fill();x.restore();return;
+  }
+  if(s.mode==='lip'){const P=pts(lm,LIP,w,h);if(P.length<8)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
+    x.globalCompositeOperation='multiply';x.globalAlpha=.5;x.fillStyle=s.color;x.fill();x.restore();
+    const ph=(performance.now()%1400)/1400,c=lm[14];if(c){x.save();x.fillStyle='rgba(255,255,255,'+(.4+.3*Math.sin(ph*6.28))+')';x.beginPath();x.arc(c.x*w,c.y*h,Math.max(w,h)*.012,0,7);x.fill();x.restore();}return;}
+  // sweep mode
+  x.save();sweep(x,lm,s.L,s.color,w,h);sweep(x,lm,s.R,s.color,w,h);
+  brush(x,lm,s.L,s.color,w,h);brush(x,lm,s.R,s.color,w,h);x.restore();
+}
+
+/* ---- step nav ---- */
+function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / ${STEPS.length}`;
+  $('sName').textContent=s.ic+' '+s.name;$('sWhere').innerHTML=s.where;$('sSku').textContent=s.sku;
+  $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';}
+function step(d){cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
+renderCard();
+</script>
+</body>
+</html>

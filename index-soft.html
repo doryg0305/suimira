@@ -925,6 +925,49 @@ function drawCreamBlob(ctx, lm, indices, color, widthRatio, w, h){
 // ✨ v3.35: drawCheekPuff — CREATE cheek fullness via light+shadow (not flat fill)
 // 亮在上(凸起) + 影在下(凹陷) => 臉蛋鼓起來的立體錯覺。化妝是畫出來、不是填色。
 // ✨ v3.38: drawLipFill — fill the WHOLE lip shape (not a dot)
+// ✨ v3.39: directional sweep (heavy→light) + animated teaching brush
+function _pathPts(lm, idx, w, h){
+  return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w, y:p.y*h}));
+}
+function _lerpAlong(pts, t){
+  const seg = t*(pts.length-1); const i=Math.min(Math.floor(seg), pts.length-2); const f=seg-i;
+  return { x: pts[i].x+(pts[i+1].x-pts[i].x)*f, y: pts[i].y+(pts[i+1].y-pts[i].y)*f };
+}
+function drawSweepStroke(ctx, lm, idx, color, w, h){
+  const pts=_pathPts(lm,idx,w,h); if(pts.length<2) return;
+  const R=Math.max(w,h); ctx.save();
+  for(let t=0;t<=1.0001;t+=0.035){
+    const p=_lerpAlong(pts,t);
+    const a=(1-t)*0.55;                 // 重(起點) → 淺(終點)
+    const rad=R*0.055*(1-t*0.45);
+    const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
+    g.addColorStop(0, color+Math.round(a*255).toString(16).padStart(2,'0'));
+    g.addColorStop(1, color+'00');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,rad,0,Math.PI*2); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawTeachBrush(ctx, lm, idx, color, w, h){
+  const pts=_pathPts(lm,idx,w,h); if(pts.length<2) return;
+  const R=Math.max(w,h);
+  const phase=(performance.now()%1600)/1600;
+  const pos=_lerpAlong(pts, phase);
+  ctx.save();
+  // 方向虛線（從哪掃到哪）
+  ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=R*0.005; ctx.setLineDash([R*0.012,R*0.012]);
+  ctx.beginPath(); pts.forEach((p,k)=>k===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y)); ctx.stroke();
+  ctx.setLineDash([]);
+  // 起點「重」標記
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y,R*0.02,0,Math.PI*2); ctx.fill();
+  // 移動的刷子
+  const r=R*0.024;
+  ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=R*0.01;
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(pos.x,pos.y,r,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle=color; ctx.beginPath(); ctx.arc(pos.x,pos.y,r*0.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+}
+
 function drawLipFill(ctx, lm, w, h, color){
   const LIP = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
   const pts = LIP.map(i=>lm[i]).filter(p=>p);
@@ -1117,6 +1160,14 @@ function drawPreviewStroke(ctx, lm, stroke, color, w, h, mode){
 
 function drawOverlay(ctx, lm, w, h){
   if (activeZone === 'none') return;  // v3.31: clean open — nothing until a look is picked
+  // ✨ v3.39: 修容教學 — 方向性掃(重→淺) + 會動的刷子示範方向
+  if (activeZone === 'contour') {
+    drawSweepStroke(ctx, lm, POS.cheekboneSweepL, '#9c7256', w, h);
+    drawSweepStroke(ctx, lm, POS.cheekboneSweepR, '#9c7256', w, h);
+    drawTeachBrush(ctx, lm, POS.cheekboneSweepL, '#9c7256', w, h);
+    drawTeachBrush(ctx, lm, POS.cheekboneSweepR, '#9c7256', w, h);
+    return;
+  }
   // v3: All 5 layers for active preset
   const ALL_LAYERS = ['contour', 'brow', 'eyeshadow', 'blush', 'highlight', 'lip'];
   let zonesToDraw = [];

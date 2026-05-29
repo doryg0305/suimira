@@ -741,7 +741,8 @@ function drawAegyoSal(ctx, lm, indices, color, w, h){
   if (coords.length < 3) return;
   // Use first 2 points to determine eye width, 3rd to determine vertical position
   const cx = (coords[0].x + coords[1].x) / 2;
-  const cy = coords[2] ? coords[2].y : (coords[0].y + coords[1].y) / 2;
+  // v3.33: 臥蠶往下移到下睫毛線『正下方』(原本中心壓在睫毛線上、一半疊在眼睛)
+  const cy = (coords[2] ? coords[2].y : (coords[0].y + coords[1].y) / 2) + Math.hypot(coords[1].x - coords[0].x, coords[1].y - coords[0].y) * 0.14;
   const eyeWidth = Math.hypot(coords[1].x - coords[0].x, coords[1].y - coords[0].y);
   const rx = eyeWidth * 0.55;     // horizontal radius = ~half eye width
   const ry = eyeWidth * 0.13;     // vertical radius = thin band
@@ -908,7 +909,7 @@ function drawPresetPreview(ctx, lm, w, h){
   // ── 4. Zone overlays (heavier alpha + wider than markers, but face-masked) ──
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.42 * intensity;
+  ctx.globalAlpha = 0.28 * intensity;
   for (const stroke of z.contour.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.contour.color, w, h, 'soft');
   ctx.restore();
 
@@ -935,7 +936,7 @@ function drawPresetPreview(ctx, lm, w, h){
 
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = 0.45 * intensity;
+  ctx.globalAlpha = 0.62 * intensity;
   for (const stroke of z.highlight.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.highlight.color, w, h, 'soft');
   ctx.restore();
 

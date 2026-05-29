@@ -19,7 +19,7 @@
     --rose:#d99080; --peach:#e6a98a; --gold:#c89668;
     --line:#ead8c5; --highlight-bg:#fff4ea;
     /* Marker colors (canvas overlay) — unchanged so makeup zones display correctly */
-    --hi:#7fd1e0; --contour:#c98fe8;
+    --hi:#f0d9b8; --contour:#9c7256;
   }
   html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Segoe UI",sans-serif;
@@ -556,7 +556,7 @@ const PRESETS = {
     name: '🌸 林襄 戀愛感',
     desc: 'Highlight-driven + high blush across nose, minimal contour, dewy warm-pink (林襄/戀愛感)',
     zones: {
-      highlight: { color: '#9fe0ec', label: 'Highlight (主角)', strokes: [
+      highlight: { color: '#f5e6cf', label: 'Highlight (主角, 香檳)', strokes: [
         { shape:'aegyo', pts: POS.aegyoL, color:'#fff0e0' },
         { shape:'aegyo', pts: POS.aegyoR, color:'#fff0e0' },
         { pts: POS.noseBridge, width: 0.013 },
@@ -565,14 +565,14 @@ const PRESETS = {
         { shape:'cream', pts: POS.cheekHighL, width: 0.028 },
         { shape:'cream', pts: POS.cheekHighR, width: 0.028 },
       ]},
-      contour: { color: '#c98fe8', label: 'Contour (極淡)', strokes: [
+      contour: { color: '#9c7256', label: 'Contour (咖啡棕)', strokes: [
         { shape:'cream', pts: POS.cheekboneSweepL, width: 0.028 },
         { shape:'cream', pts: POS.cheekboneSweepR, width: 0.028 },
       ]},
       blush: { color: '#ff8fa0', label: 'Blush (高位 + 橫過鼻樑)', strokes: [
-        { pts: POS.appleL_small, width: 0.085, fill: 'oval' },
-        { pts: POS.appleR_small, width: 0.085, fill: 'oval' },
-        { shape:'cream', pts: POS.noseBridge, width: 0.028, color:'#ff9aa8' },
+        { pts: POS.appleL_big, width: 0.080, fill: 'oval' },
+        { pts: POS.appleR_big, width: 0.080, fill: 'oval' },
+        { shape:'cream', pts: POS.noseBridge, width: 0.026, color:'#ff9aa8' },
       ]},
       eyeshadow: { color: '#e8a8b8', label: 'Eyeshadow (暖粉)', strokes: [
         { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#e8a8b8' },
@@ -976,7 +976,7 @@ function drawPresetPreview(ctx, lm, w, h){
   if (z.brow) {
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 0.55 * intensity;
+    ctx.globalAlpha = 0.42 * intensity;
     for (const stroke of z.brow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.brow.color, w, h, 'soft');
     ctx.restore();
   }

@@ -924,6 +924,23 @@ function drawCreamBlob(ctx, lm, indices, color, widthRatio, w, h){
 // Result: face transforms like opening Meitu and tapping a filter chip.
 // ✨ v3.35: drawCheekPuff — CREATE cheek fullness via light+shadow (not flat fill)
 // 亮在上(凸起) + 影在下(凹陷) => 臉蛋鼓起來的立體錯覺。化妝是畫出來、不是填色。
+// ✨ v3.38: drawLipFill — fill the WHOLE lip shape (not a dot)
+function drawLipFill(ctx, lm, w, h, color){
+  const LIP = [61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+  const pts = LIP.map(i=>lm[i]).filter(p=>p);
+  if (pts.length < 8) return;
+  ctx.beginPath();
+  pts.forEach((p,i)=>{ const x=p.x*w, y=p.y*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  // subtle gloss highlight on lower lip centre
+  const c = lm[14]; if (c){ ctx.save(); ctx.globalCompositeOperation='screen';
+    const g=ctx.createRadialGradient(c.x*w, c.y*h, 0, c.x*w, c.y*h, Math.max(w,h)*0.025);
+    g.addColorStop(0,'rgba(255,240,235,0.45)'); g.addColorStop(1,'rgba(255,240,235,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(c.x*w, c.y*h, Math.max(w,h)*0.025,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+}
+
 function drawCheekPuff(ctx, lm, anchorIdx, w, h, strength){
   const p = lm[anchorIdx]; if(!p) return;
   const cx = p.x*w, cy = p.y*h;
@@ -1008,7 +1025,7 @@ function drawPresetPreview(ctx, lm, w, h){
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
   ctx.globalAlpha = 0.62 * intensity;
-  for (const stroke of z.lip.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.lip.color, w, h, 'feathered');
+  drawLipFill(ctx, lm, w, h, z.lip.color);
   ctx.restore();
 }
 

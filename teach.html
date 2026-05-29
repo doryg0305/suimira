@@ -182,20 +182,31 @@ function sweep(x,lm,idx,color,w,h){
 }
 function brush(x,lm,idx,color,w,h){
   const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  const ph=(performance.now()%1600)/1600,p=along(P,ph);
-  x.save();x.strokeStyle='rgba(255,255,255,.9)';x.lineWidth=R*0.005;x.setLineDash([R*0.012,R*0.012]);
+  const ph=(performance.now()%1700)/1700,p=along(P,ph),p2=along(P,Math.min(0.999,ph+0.05));
+  const ang=Math.atan2(p2.y-p.y,p2.x-p.x);
+  x.save();
+  x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
   x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  x.fillStyle='rgba(255,255,255,.5)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.018,0,7);x.fill(); // 起點=重
-  x.shadowColor='rgba(0,0,0,.35)';x.shadowBlur=R*0.01;x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,R*0.024,0,7);x.fill();
-  x.shadowBlur=0;x.fillStyle=color;x.beginPath();x.arc(p.x,p.y,R*0.012,0,7);x.fill();x.restore();
+  x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.02,0,7);x.fill(); // 起點=重
+  const r=R*0.036;
+  x.shadowColor='rgba(0,0,0,.45)';x.shadowBlur=R*0.014;
+  x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.shadowBlur=0;
+  x.fillStyle=color;x.beginPath();x.arc(p.x,p.y,r*0.5,0,7);x.fill();
+  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.98)'; // 方向箭頭
+  x.beginPath();x.moveTo(r*1.15,0);x.lineTo(r*0.45,-r*0.55);x.lineTo(r*0.45,r*0.55);x.closePath();x.fill();
+  x.restore();
 }
 const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
 function drawGuide(x,lm,w,h){
   const s=STEPS[cur];
-  if(s.mode==='base'){ // 全臉柔提亮示意
+  if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
     const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
-    const P=pts(lm,O,w,h);if(P.length<6)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
-    x.globalCompositeOperation='soft-light';x.globalAlpha=.5;x.fillStyle='#fff1e4';x.fill();x.restore();return;
+    let P=pts(lm,O,w,h);if(P.length<6)return;
+    const cx=P.reduce((a,p)=>a+p.x,0)/P.length, cy=P.reduce((a,p)=>a+p.y,0)/P.length;
+    const SC=1.13, UP=Math.max(w,h)*0.05;
+    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 額頭(上半)再往上推到髮際
+    x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
+    x.globalCompositeOperation='soft-light';x.globalAlpha=.55;x.fillStyle='#fff1e4';x.fill();x.restore();return;
   }
   if(s.mode==='lip'){const P=pts(lm,LIP,w,h);if(P.length<8)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
     x.globalCompositeOperation='multiply';x.globalAlpha=.5;x.fillStyle=s.color;x.fill();x.restore();

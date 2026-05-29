@@ -107,6 +107,20 @@
       <button id="next" class="primary" onclick="step(1)">下一步 ›</button>
     </div>
     <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
+
+    <!-- feedback capture: 知道是誰 + 收回饋 -->
+    <div class="card" id="fbCard">
+      <div class="stepname" style="font-size:15px;">💬 喜歡嗎？留個想法給 Dory</div>
+      <div class="where" style="color:var(--muted);margin-bottom:8px;">哪裡喜歡 / 哪裡怪 / 想要什麼？讓我知道是誰 🤍</div>
+      <form id="fb" action="https://formspree.io/f/mwvzzqay" method="POST">
+        <input type="email" name="email" placeholder="你的 email" required
+          style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:8px;background:#fff;">
+        <textarea name="message" rows="2" placeholder="想法 / 建議…"
+          style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;background:#fff;resize:vertical;"></textarea>
+        <button type="submit" class="btn" style="margin-top:8px;">送出回饋 →</button>
+      </form>
+      <div id="fbOk" class="hidden" style="text-align:center;color:#2e7d32;font-weight:600;padding:10px;">🤍 收到了，謝謝你的回饋！</div>
+    </div>
   </div>
 </div>
 
@@ -252,6 +266,11 @@ function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / 
   $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';}
 function step(d){cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
 renderCard();
+// feedback form → Formspree（看得到是誰 + 回饋）
+(function(){var f=$('fb');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();
+  fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
+   .then(function(){f.classList.add('hidden');$('fbOk').classList.remove('hidden');})
+   .catch(function(){f.submit();});});})();
 </script>
 <script data-goatcounter="https://suimira.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

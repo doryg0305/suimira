@@ -54,6 +54,18 @@
   .btn-ghost{background:var(--bg2);color:var(--ink);border:1px solid var(--line)!important;}
   input[type=file]{display:none;}
 
+  /* ✨ v3.29: waitlist CTA — capture at peak interest */
+  .cta{margin-top:22px;background:linear-gradient(135deg,#fff4ea,var(--bg2));
+    border:1px solid var(--line);border-radius:18px;padding:20px 18px;text-align:center;}
+  .cta h3{margin:0 0 6px;font-size:17px;color:var(--ink);}
+  .cta p{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.6;}
+  .cta form{display:flex;gap:8px;flex-wrap:wrap;}
+  .cta input[type=email]{flex:1;min-width:160px;border:1px solid var(--line);
+    border-radius:12px;padding:13px 14px;font-size:14px;background:#fff;color:var(--ink);}
+  .cta button{border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:700;
+    background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;cursor:pointer;}
+  .cta .ok{color:#2e7d32;font-size:13px;margin:10px 0 0;font-weight:600;}
+
   /* ✨ NEW v1: layer toggle */
   .layers{display:flex;gap:6px;margin:12px 0 8px;flex-wrap:wrap;}
   .layers button{flex:1;min-width:60px;padding:8px 6px;border:1px solid var(--line);
@@ -197,6 +209,31 @@
   <div class="disclaim">
     ⚠️ Marker positions computed from MediaPipe FaceMesh (478 landmarks). Color recommendations are rule-based — professional color matching not yet integrated. All processing runs client-side on your device; photos are never uploaded or stored.
   </div>
+
+  <!-- ✨ v3.29: waitlist capture — hidden until Formspree endpoint wired + product ready for traffic -->
+  <div class="cta" style="display:none">
+    <h3>Want Suimira for your own face?</h3>
+    <p>This is an early prototype. Join the early-access list — be first when the full app + smart mirror launch.</p>
+    <form id="waitForm" action="FORMSPREE_ENDPOINT_HERE" method="POST">
+      <input type="email" name="email" placeholder="your@email.com" required>
+      <input type="hidden" name="_subject" value="New Suimira waitlist signup">
+      <button type="submit">Join the waitlist →</button>
+    </form>
+    <p id="waitMsg" class="ok" style="display:none;">🤍 You're on the list — thank you!</p>
+  </div>
+  <script>
+    (function(){
+      var f=document.getElementById('waitForm');
+      if(!f) return;
+      f.addEventListener('submit',function(e){
+        if(f.action.indexOf('FORMSPREE_ENDPOINT_HERE')>-1){return;} /* not wired yet → normal post */
+        e.preventDefault();
+        fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
+          .then(function(){f.style.display='none';document.getElementById('waitMsg').style.display='block';})
+          .catch(function(){f.submit();});
+      });
+    })();
+  </script>
 </div>
 
 <script>
@@ -1433,5 +1470,8 @@ async function switchMode(m){
 }
 setStatus('Ready · Pick a face photo to start');
 </script>
+<!-- ✨ v3.29: GoatCounter analytics (count demo visitors) -->
+<script data-goatcounter="https://suimira.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

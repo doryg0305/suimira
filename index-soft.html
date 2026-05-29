@@ -556,7 +556,7 @@ const PRESETS = {
     name: '🌸 林襄 戀愛感',
     desc: 'Highlight-driven + high blush across nose, minimal contour, dewy warm-pink (林襄/戀愛感)',
     zones: {
-      highlight: { color: '#f5e6cf', label: 'Highlight (主角, 香檳)', strokes: [
+      highlight: { color: '#ecd9b6', label: 'Highlight (主角, 香檳)', strokes: [
         { shape:'aegyo', pts: POS.aegyoL, color:'#fff0e0' },
         { shape:'aegyo', pts: POS.aegyoR, color:'#fff0e0' },
         { pts: POS.noseBridge, width: 0.013 },
@@ -574,9 +574,9 @@ const PRESETS = {
         { pts: POS.appleR_big, width: 0.080, fill: 'oval' },
         { shape:'cream', pts: POS.noseBridge, width: 0.026, color:'#ff9aa8' },
       ]},
-      eyeshadow: { color: '#e8a8b8', label: 'Eyeshadow (暖粉)', strokes: [
-        { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#e8a8b8' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.040, color:'#e8a8b8' },
+      eyeshadow: { color: '#bfa078', label: 'Eyeshadow (暖粉)', strokes: [
+        { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#bfa078' },
+        { shape:'oval', pts: POS.upperLidR, width: 0.040, color:'#bfa078' },
       ]},
       lip: { color: '#e0808f', label: 'Lip (玫瑰水光)', strokes: [
         { pts: POS.lipsOuter, width: 0.020, fill: 'oval' },
@@ -939,7 +939,7 @@ function drawCheekPuff(ctx, lm, anchorIdx, w, h, strength){
   // 上方提亮 => 鼓起的高點
   ctx.globalCompositeOperation = 'screen';
   const hi = ctx.createRadialGradient(cx, cy-R*0.15, 0, cx, cy-R*0.15, R*0.8);
-  hi.addColorStop(0, `rgba(255,246,236,${0.55*s})`);
+  hi.addColorStop(0, `rgba(255,246,236,${0.30*s})`);
   hi.addColorStop(1, 'rgba(255,246,236,0)');
   ctx.fillStyle = hi; ctx.beginPath(); ctx.arc(cx, cy-R*0.15, R*0.8, 0, Math.PI*2); ctx.fill();
   ctx.restore();
@@ -1001,7 +1001,7 @@ function drawPresetPreview(ctx, lm, w, h){
 
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = 0.62 * intensity;
+  ctx.globalAlpha = 0.40 * intensity;
   for (const stroke of z.highlight.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.highlight.color, w, h, 'soft');
   ctx.restore();
 

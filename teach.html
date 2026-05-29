@@ -129,7 +129,7 @@ const STEPS=[
    paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
  {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'brow',
    paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
- {key:'lip',ic:'💋',name:'唇（玫瑰水光）',where:'<b>塗滿全唇</b>、中央點一點唇蜜 → 果凍水光唇',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
+ {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'①唇珠/人中畫小 <b>C</b> 提亮 ②嘴唇<b>中央上色最深</b> → 往邊緣暈淡 ③下唇中央點一點唇蜜 → 嘟嘟立體',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
 ];
 
 /* ---- views ---- */
@@ -224,9 +224,22 @@ function drawGuide(x,lm,w,h){
     x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
     x.globalCompositeOperation='soft-light';x.globalAlpha=.55;x.fillStyle='#fff1e4';x.fill();x.restore();return;
   }
-  if(s.mode==='lip'){const P=pts(lm,LIP,w,h);if(P.length<8)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
-    x.globalCompositeOperation='multiply';x.globalAlpha=.5;x.fillStyle=s.color;x.fill();x.restore();
-    brush(x,lm,LIP,s.color,w,h); // 沿唇繞=塗滿方向
+  if(s.mode==='lip'){ // 嘟嘟唇：中央深→邊緣淡 + 唇珠小C + 下唇唇蜜
+    const P=pts(lm,LIP,w,h);if(P.length<8||!lm[13]||!lm[14])return;const R=Math.max(w,h);
+    x.save();
+    x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.clip();
+    x.globalCompositeOperation='multiply';
+    x.globalAlpha=.26;x.fillStyle=s.color;x.fillRect(0,0,w,h); // 全唇淡底
+    const cx=lm[13].x*w,cy=((lm[13].y+lm[14].y)/2)*h; // 中央最深
+    const g=x.createRadialGradient(cx,cy,0,cx,cy,R*0.06);
+    g.addColorStop(0,s.color+'cc');g.addColorStop(.55,s.color+'55');g.addColorStop(1,s.color+'00');
+    x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,w,h);
+    x.restore();
+    const ph=(performance.now()%1500)/1500,a=.4+.3*Math.sin(ph*6.28);
+    x.save();x.globalCompositeOperation='screen';x.fillStyle='rgba(255,246,238,'+a+')';
+    if(lm[0]){x.beginPath();x.arc(lm[0].x*w,lm[0].y*h,R*0.013,0,7);x.fill();} // 唇珠小C提亮
+    x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.018,0,7);x.fill(); // 下唇中央唇蜜
+    x.restore();
     return;}
   if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
   // sweep mode — 多區各自 sweep + brush

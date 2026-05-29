@@ -146,8 +146,8 @@ const STEPS=[
    paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
  {key:'highlight',ic:'✨',name:'打亮',where:'沿<b>臉中線</b>提亮：鼻樑、額中、唇珠、下巴 + 眼下（<b>靠近中央</b>才把五官立出來，不是打顴骨外側）',sku:'OFRA Highlighter Cloud9',mode:'sweep',
    paths:[[6,197,195,5,4],[10,151],[37,0,267],[200,152]],color:'#f0d9b8'},
- {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角 · 高位+橫過鼻樑）',where:'蘋果肌<b>偏高</b>往太陽穴斜掃、再<b>輕橫過鼻樑</b> → 戀愛感',sku:'Dior 001 + Clinique Pink Pop',mode:'sweep',
-   paths:[[117,118,119,47,100],[346,347,348,277,329]],color:'#ff8fa0'},
+ {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'在蘋果肌（笑起來鼓的地方）<b>一圈一圈打</b>、暈開；位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop',mode:'blush',
+   paths:[[50,205,118],[280,425,347]],color:'#ff8fa0'},
  {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
    paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
  {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
@@ -238,6 +238,22 @@ function drawBrowHairs(x,lm,idx,color,w,h){
   x.beginPath();x.arc(c.x,c.y,r,0,7);x.fill();x.stroke();
   x.restore();
 }
+function drawBlush(x,lm,idxs,color,w,h){
+  const ps=idxs.map(i=>lm[i]).filter(p=>p);if(!ps.length)return;
+  const cx=ps.reduce((a,p)=>a+p.x,0)/ps.length*w, cy=ps.reduce((a,p)=>a+p.y,0)/ps.length*h;
+  const R=Math.max(w,h),rad=R*0.058;
+  x.save();x.globalCompositeOperation='multiply'; // 柔圓腮紅
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,rad);
+  g.addColorStop(0,color+'5a');g.addColorStop(.6,color+'22');g.addColorStop(1,color+'00');
+  x.fillStyle=g;x.beginPath();x.arc(cx,cy,rad,0,7);x.fill();x.restore();
+  x.save(); // 畫圈 cursor
+  const cr=rad*0.5,ph=performance.now()/350;
+  x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=R*0.004;x.setLineDash([R*0.012,R*0.012]);
+  x.beginPath();x.arc(cx,cy,cr,0,7);x.stroke();x.setLineDash([]);
+  const px=cx+cr*Math.cos(ph),py=cy+cr*Math.sin(ph),r=R*0.013;
+  x.fillStyle=color+'66';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
+  x.beginPath();x.arc(px,py,r,0,7);x.fill();x.stroke();x.restore();
+}
 function drawGuide(x,lm,w,h){
   const s=STEPS[cur];
   if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
@@ -278,6 +294,7 @@ function drawGuide(x,lm,w,h){
     x.restore();
     return;}
   if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
+  if(s.mode==='blush'){(s.paths||[]).forEach(P=>drawBlush(x,lm,P,s.color,w,h));return;}
   // sweep mode — 多區各自 sweep + brush
   x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
 }

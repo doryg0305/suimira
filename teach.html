@@ -127,7 +127,7 @@ const STEPS=[
    paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
  {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
    paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
- {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'sweep',
+ {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'brow',
    paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
  {key:'lip',ic:'💋',name:'唇（玫瑰水光）',where:'<b>塗滿全唇</b>、中央點一點唇蜜 → 果凍水光唇',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
 ];
@@ -175,7 +175,9 @@ function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,
 function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
 function sweep(x,lm,idx,color,w,h){
   const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.55,rad=R*0.045*(1-t*0.45);
+  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
+  const base=Math.max(R*0.011,Math.min(R*0.04,len*0.22));
+  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.40,rad=base*(1-t*0.45);
     const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
     g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
     x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
@@ -188,18 +190,29 @@ function brush(x,lm,idx,color,w,h){
   x.save();
   x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
   x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.02,0,7);x.fill(); // 起點=重
-  const r=Math.max(R*0.010,Math.min(R*0.022,len*0.13)); // 小區→小刷子
-  x.globalAlpha=.72; // 半透明，透出臉、不蓋眼睛
-  x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=R*0.008;
-  x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.shadowBlur=0;
-  x.fillStyle=color;x.beginPath();x.arc(p.x,p.y,r*0.5,0,7);x.fill();
-  x.globalAlpha=1;
-  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.9)'; // 方向箭頭
-  x.beginPath();x.moveTo(r*1.0,0);x.lineTo(r*0.4,-r*0.5);x.lineTo(r*0.4,r*0.5);x.closePath();x.fill();
+  x.fillStyle='rgba(255,255,255,.4)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.011,0,7);x.fill(); // 起點=重(小)
+  const r=Math.max(R*0.008,Math.min(R*0.015,len*0.09)); // 中空小環、不蓋臉
+  x.lineWidth=R*0.004;x.strokeStyle='rgba(255,255,255,.97)';x.fillStyle=color+'55';
+  x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.stroke();
+  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.97)'; // 小箭頭
+  x.beginPath();x.moveTo(r*1.8,0);x.lineTo(r*0.9,-r*0.7);x.lineTo(r*0.9,r*0.7);x.closePath();x.fill();
   x.restore();
 }
 const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+function drawBrowHairs(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  x.save();
+  x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=R*0.0035;x.setLineDash([R*0.01,R*0.01]);
+  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
+  const N=12,hl=R*0.022;
+  for(let i=0;i<=N;i++){const p=along(P,i/N);
+    x.strokeStyle=color+'cc';x.lineWidth=R*0.0035;
+    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-hl*0.5,p.y-hl);x.stroke();} // 一根根往上斜=毛流
+  const ph=(performance.now()%1600)/1600,c=along(P,ph),r=R*0.011;
+  x.fillStyle=color+'55';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
+  x.beginPath();x.arc(c.x,c.y,r,0,7);x.fill();x.stroke();
+  x.restore();
+}
 function drawGuide(x,lm,w,h){
   const s=STEPS[cur];
   if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
@@ -215,6 +228,7 @@ function drawGuide(x,lm,w,h){
     x.globalCompositeOperation='multiply';x.globalAlpha=.5;x.fillStyle=s.color;x.fill();x.restore();
     brush(x,lm,LIP,s.color,w,h); // 沿唇繞=塗滿方向
     return;}
+  if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
   // sweep mode — 多區各自 sweep + brush
   x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
 }

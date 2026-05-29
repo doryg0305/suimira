@@ -118,17 +118,17 @@ let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,
 const STEPS=[
  {key:'base',ic:'🩷',name:'底妝 · 皮膚先好起來',where:'全臉勻底妝、輕提亮——<b>皮膚先乾淨透亮</b>，後面才好看',sku:'Dior 超完美柔光粉底',mode:'base'},
  {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
-   L:[234,117,205,187],R:[454,346,425,411],color:'#9c7256'},
+   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
  {key:'highlight',ic:'✨',name:'打亮（這個 look 的主角）',where:'<b>鼻樑由上往下細掃</b> + 顴骨高點點開，用光做立體',sku:'OFRA Highlighter Cloud9',mode:'sweep',
-   L:[6,197,195,5,4],R:[6,197,195,5,4],color:'#f0d9b8'},
+   paths:[[6,197,195,5,4],[50,205],[280,425]],color:'#f0d9b8'},
  {key:'blush',ic:'🌷',name:'腮紅（高位 + 橫過鼻樑）',where:'蘋果肌<b>偏高</b>往太陽穴斜掃、再<b>輕橫過鼻樑</b> → 戀愛感',sku:'Dior 001 + Clinique Pink Pop',mode:'sweep',
-   L:[117,118,119,47,100],R:[346,347,348,277,329],color:'#ff8fa0'},
+   paths:[[117,118,119,47,100],[346,347,348,277,329]],color:'#ff8fa0'},
  {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
-   L:[133,145,153],R:[362,374,380],color:'#fff0e0'},
+   paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
  {key:'eyeshadow',ic:'🤎',name:'眼影（貼膚暖棕）',where:'眼皮暖棕、<b>往外、往下暈</b>一點接到腮紅、同色系',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
-   L:[27,28,29,30],R:[257,258,259,260],color:'#c9a98a'},
+   paths:[[27,28,29,30],[257,258,259,260]],color:'#c9a98a'},
  {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順著<b>毛流一根一根</b>補、缺的地方補就好——自然平眉、不要框死',sku:'灰棕眉筆/眉粉',mode:'sweep',
-   L:[70,63,105,66,107],R:[336,296,334,293,300],color:'#6a4a34'},
+   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
  {key:'lip',ic:'💋',name:'唇（玫瑰水光）',where:'<b>塗滿全唇</b>、中央點一點唇蜜 → 果凍水光唇',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
 ];
 
@@ -182,13 +182,14 @@ function sweep(x,lm,idx,color,w,h){
 }
 function brush(x,lm,idx,color,w,h){
   const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
   const ph=(performance.now()%1700)/1700,p=along(P,ph),p2=along(P,Math.min(0.999,ph+0.05));
   const ang=Math.atan2(p2.y-p.y,p2.x-p.x);
   x.save();
   x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
   x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
   x.fillStyle='rgba(255,255,255,.55)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.02,0,7);x.fill(); // 起點=重
-  const r=R*0.022;
+  const r=Math.max(R*0.010,Math.min(R*0.022,len*0.13)); // 小區→小刷子
   x.globalAlpha=.72; // 半透明，透出臉、不蓋眼睛
   x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=R*0.008;
   x.fillStyle='#fff';x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.shadowBlur=0;
@@ -212,10 +213,10 @@ function drawGuide(x,lm,w,h){
   }
   if(s.mode==='lip'){const P=pts(lm,LIP,w,h);if(P.length<8)return;x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
     x.globalCompositeOperation='multiply';x.globalAlpha=.5;x.fillStyle=s.color;x.fill();x.restore();
-    const ph=(performance.now()%1400)/1400,c=lm[14];if(c){x.save();x.fillStyle='rgba(255,255,255,'+(.4+.3*Math.sin(ph*6.28))+')';x.beginPath();x.arc(c.x*w,c.y*h,Math.max(w,h)*.012,0,7);x.fill();x.restore();}return;}
-  // sweep mode
-  x.save();sweep(x,lm,s.L,s.color,w,h);sweep(x,lm,s.R,s.color,w,h);
-  brush(x,lm,s.L,s.color,w,h);brush(x,lm,s.R,s.color,w,h);x.restore();
+    brush(x,lm,LIP,s.color,w,h); // 沿唇繞=塗滿方向
+    return;}
+  // sweep mode — 多區各自 sweep + brush
+  x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
 }
 
 /* ---- step nav ---- */

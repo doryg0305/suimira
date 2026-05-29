@@ -1,1477 +1,258 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="theme-color" content="#fcf8f4" />
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-<title>Suimira · Live AR Makeup Mirror</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 你想變成這個 look</title>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  :root{
-    /* v3.11: warm peach/cream palette matched with landing.html */
-    --bg:#fcf8f4; --bg2:#f8eee8; --bg3:#f5d9c4;
-    --ink:#3d2a1f; --ink-soft:#5c4030; --muted:#8a6f5c;
-    --rose:#d99080; --peach:#e6a98a; --gold:#c89668;
-    --line:#ead8c5; --highlight-bg:#fff4ea;
-    /* Marker colors (canvas overlay) — unchanged so makeup zones display correctly */
-    --hi:#7fd1e0; --contour:#c98fe8;
-  }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Segoe UI",sans-serif;
-    -webkit-font-smoothing:antialiased;}
-  .wrap{max-width:560px;margin:0 auto;padding:18px 16px 60px;}
-  header{text-align:center;padding:8px 0 4px;}
-  .logo{font-size:26px;font-weight:700;letter-spacing:.18em;
-    background:linear-gradient(90deg,var(--rose),var(--gold));
-    -webkit-background-clip:text;background-clip:text;color:transparent;}
-  .tag{font-size:12px;color:var(--muted);letter-spacing:.05em;margin-top:2px;}
-  .badge{display:inline-block;font-size:10px;color:var(--gold);border:1px solid var(--line);
-    border-radius:999px;padding:2px 8px;margin-top:6px;letter-spacing:.1em;}
-
-  .modes{display:flex;gap:8px;margin:18px 0 12px;}
-  .modes button{flex:1;background:var(--bg2);color:var(--muted);border:1px solid var(--line);
-    border-radius:12px;padding:12px;font-size:14px;font-weight:600;transition:.2s;}
-  .modes button.on{background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;border-color:transparent;}
-
-  .stage{position:relative;width:100%;aspect-ratio:3/4;background:var(--bg2);
-    border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;
-    align-items:center;justify-content:center;}
-  .stage canvas,.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .stage video{transform:scaleX(-1);}
-  .stage canvas{transform:scaleX(-1);}
-  #uploadCanvas{transform:none;}
-  .hint{color:var(--muted);font-size:13px;text-align:center;padding:0 30px;z-index:1;}
-  .hint b{color:var(--ink);}
-
-  .controls{display:flex;gap:10px;margin:14px 0;}
-  .controls .btn{flex:1;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;}
-  .btn-primary{background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;}
-  .btn-ghost{background:var(--bg2);color:var(--ink);border:1px solid var(--line)!important;}
-  input[type=file]{display:none;}
-
-  /* ✨ v3.29: waitlist CTA — capture at peak interest */
-  .cta{margin-top:22px;background:linear-gradient(135deg,#fff4ea,var(--bg2));
-    border:1px solid var(--line);border-radius:18px;padding:20px 18px;text-align:center;}
-  .cta h3{margin:0 0 6px;font-size:17px;color:var(--ink);}
-  .cta p{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.6;}
-  .cta form{display:flex;gap:8px;flex-wrap:wrap;}
-  .cta input[type=email]{flex:1;min-width:160px;border:1px solid var(--line);
-    border-radius:12px;padding:13px 14px;font-size:14px;background:#fff;color:var(--ink);}
-  .cta button{border:none;border-radius:12px;padding:13px 18px;font-size:14px;font-weight:700;
-    background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;cursor:pointer;}
-  .cta .ok{color:#2e7d32;font-size:13px;margin:10px 0 0;font-weight:600;}
-
-  /* ✨ NEW v1: layer toggle */
-  .layers{display:flex;gap:6px;margin:12px 0 8px;flex-wrap:wrap;}
-  .layers button{flex:1;min-width:60px;padding:8px 6px;border:1px solid var(--line);
-    background:var(--bg2);color:var(--muted);border-radius:10px;font-size:11px;
-    font-weight:600;transition:.2s;letter-spacing:.02em;}
-  .layers button.on{border-color:transparent;color:#2a1020;}
-  .layers button[data-zone=all].on{background:linear-gradient(135deg,var(--rose),var(--gold));}
-  .layers button[data-zone=highlight].on{background:var(--hi);}
-  .layers button[data-zone=contour].on{background:var(--contour);}
-  .layers button[data-zone=blush].on{background:var(--rose);}
-  .layers button[data-zone=step].on{background:var(--gold);}
-  .layers button[data-zone=preview].on{background:linear-gradient(90deg,var(--hi),var(--contour),var(--rose));color:#2a1020;}
-
-  /* ✨ v1.1: step-by-step expanded panel */
-  .stepbar{display:none;background:var(--bg2);border:1px solid var(--line);
-    border-radius:12px;padding:14px 16px;margin-top:8px;flex-direction:column;gap:10px;}
-  .stepbar.show{display:flex;}
-  .step-nav{display:flex;align-items:center;gap:10px;}
-  .step-nav .info{flex:1;font-size:14px;color:var(--ink);}
-  .step-nav .info b{color:var(--gold);}
-  .step-nav button{background:var(--bg);color:var(--ink);border:1px solid var(--line);
-    border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;}
-  .step-nav button:disabled{opacity:.3;}
-  .step-detail{font-size:13px;line-height:1.7;color:var(--ink);
-    background:var(--bg);border-radius:10px;padding:12px 14px;}
-  .step-detail .row{display:flex;gap:8px;margin:4px 0;}
-  .step-detail .label{color:var(--muted);min-width:60px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
-  .step-detail .val{flex:1;}
-  .step-detail .why{color:var(--gold);font-style:italic;margin-bottom:8px;font-size:13px;border-left:2px solid var(--gold);padding-left:10px;}
-  .step-detail .apply-list{margin:6px 0 6px 0;padding:0;list-style:none;}
-  .step-detail .apply-list li{padding:3px 0;font-size:13px;}
-  .step-detail .tip{color:var(--rose);font-size:12px;margin-top:6px;padding:8px;background:#fff4ea;border:1px solid var(--line);border-radius:8px;}
-  .step-detail .blend{color:#3d6066;font-size:12px;margin-top:6px;padding:8px;background:#eaf4f5;border:1px solid var(--line);border-radius:8px;}
-
-  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:6px 0 2px;}
-  .legend span{display:inline-flex;align-items:center;gap:5px;}
-  .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-
-  .panel{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px;}
-  .panel h3{margin:0 0 10px;font-size:13px;color:var(--gold);letter-spacing:.08em;font-weight:600;}
-  .row{display:flex;align-items:center;gap:12px;margin:8px 0;font-size:14px;}
-  .swatch{width:42px;height:42px;border-radius:10px;border:2px solid #fff3;flex:none;}
-  .kv{font-size:13px;color:var(--muted);}
-  .kv b{color:var(--ink);font-weight:600;}
-  .advice{font-size:14px;line-height:1.7;color:var(--ink);}
-  .advice li{margin:5px 0;}
-  .disclaim{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.6;border-top:1px solid var(--line);padding-top:10px;}
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
+    --line:#ecdfd4;--card:#fff;--chip:#f6ece4;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;}
+  .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
+  .h{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:500;text-align:center;margin:2px 16px 2px;}
+  .sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
   .hidden{display:none!important;}
-  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;margin-top:8px;}
-  .spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);
-    border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;vertical-align:-2px;margin-right:6px;}
+
+  /* WALL */
+  .wall{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 16px 30px;}
+  .look{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    cursor:pointer;box-shadow:0 3px 12px rgba(150,90,90,.08);transition:transform .15s;}
+  .look:active{transform:scale(.97);}
+  .look img{width:100%;height:160px;object-fit:cover;display:block;background:#eadfd5;}
+  .look .nm{padding:8px 10px;font-size:13px;font-weight:600;}
+  .look .nm small{display:block;color:var(--muted);font-weight:400;font-size:11px;}
+  .look.soon{opacity:.55;}
+  .look.soon .ph{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:#f1e7dd;}
+
+  /* TARGET */
+  .hero{margin:0 16px;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(150,90,90,.18);}
+  .hero img{width:100%;display:block;}
+  .tcta{padding:14px 16px 26px;}
+  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;font-weight:600;font-size:13px;padding:8px;}
+
+  /* TEACH */
+  .stage{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+  .stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .stage video{transform:scaleX(-1);} .stage canvas{transform:scaleX(-1);}
+  .stagehint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;font-size:13px;padding:0 30px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;}
+  .card .stepnum{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em;}
+  .card .stepname{font-size:17px;font-weight:700;margin:2px 0 6px;}
+  .card .where{font-size:13.5px;margin:3px 0;}
+  .card .where b{color:var(--rose);}
+  .card .sku{display:inline-block;margin-top:7px;font-size:11px;background:var(--chip);border:1px solid var(--line);
+    border-radius:20px;padding:3px 10px;color:#7a5a3a;font-weight:600;}
+  .nav{display:flex;gap:10px;padding:0 16px 24px;}
+  .nav button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:13px;padding:13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
+  .nav button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));}
+  .nav button:disabled{opacity:.4;}
+  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 16px 6px;}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;margin-right:6px;vertical-align:-1px;}
   @keyframes s{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="logo">SUIMIRA</div>
-    <div class="tag">AR makeup mirror · precise marker placement · layered guidance</div>
-    <div class="badge">BETA</div>
-  </header>
+<div class="app">
+  <div class="brand">S U I M I R A</div>
 
-  <div class="modes">
-    <button id="mUpload" class="on">📷 Upload photo</button>
-    <button id="mLive">🤳 Live camera</button>
-  </div>
-
-  <!-- ✨ v3.4: PRESET selector moved ABOVE stage — first thing user sees -->
-  <div id="presets" class="layers hidden" style="margin-bottom:10px;">
-    <button data-preset="sweet" class="on">🍑 Korean Warm Pink Sparkle</button>
-    <button data-preset="bold">🍓 Coral Tinted Lip</button>
-    <button data-preset="kpop">❄️ K-pop Clean Girl</button>
-    <button data-preset="bare">💧 Bare-Face Glow</button>
-  </div>
-
-  <div class="stage">
-    <video id="video" class="hidden" playsinline muted></video>
-    <canvas id="liveCanvas" class="hidden"></canvas>
-    <canvas id="uploadCanvas" class="hidden"></canvas>
-    <div id="hint" class="hint">Tap <b>Pick a face photo</b> below<br>Front-facing, even lighting, no bangs covering face works best</div>
-  </div>
-
-  <!-- ✨ v3.4: Mode-of-view explained inline -->
-  <div id="layers" class="layers hidden">
-    <button data-zone="preview" class="on">✨ Preview (full look)</button>
-    <button data-zone="step" style="background:linear-gradient(135deg,var(--rose),var(--gold));color:#2a1020;font-weight:600;">📚 Step-by-step →</button>
-    <button data-zone="all">All markers</button>
-    <button data-zone="highlight">Highlight</button>
-    <button data-zone="contour">Contour</button>
-    <button data-zone="blush">Blush</button>
-    <button data-zone="brow">Brow</button>
-    <button data-zone="eyeshadow">Eyeshadow</button>
-    <button data-zone="lip">Lip</button>
-  </div>
-
-  <!-- ✨ v1.2: Step-by-step expanded panel -->
-  <div id="stepbar" class="stepbar">
-    <div class="step-nav">
-      <button id="prevStep">‹ Prev</button>
-      <div class="info">Step <b id="stepNum">1</b>/5 · <b id="stepName">Contour</b></div>
-      <button id="nextStep">Next ›</button>
-    </div>
-    <div class="step-detail" id="stepDetail"></div>
-  </div>
-
-  <div class="legend">
-    <span><i class="dot" style="background:var(--hi)"></i>Highlight</span>
-    <span><i class="dot" style="background:var(--contour)"></i>Contour / Shadow</span>
-    <span><i class="dot" style="background:var(--rose)"></i>Blush</span>
-  </div>
-
-  <div class="controls">
-    <input type="file" id="file" accept="image/*" />
-    <button id="uploadBtn" class="btn btn-primary">Pick a face photo</button>
-    <button id="camBtn" class="btn btn-primary hidden">Open camera</button>
-    <button id="snapBtn" class="btn btn-ghost hidden">📸 Freeze frame (paint while looking)</button>
-    <button id="unfreezeBtn" class="btn btn-ghost hidden">▶ Resume live</button>
-    <button id="downloadBtn" class="btn btn-ghost hidden">⬇ Download snapshot</button>
-  </div>
-
-  <div id="status" class="status"></div>
-
-  <div id="results" class="hidden">
-    <div class="panel">
-      <h3>Skin Tone Sample</h3>
-      <div class="row">
-        <div id="swatch" class="swatch"></div>
-        <div class="kv">Sampled from cheek + forehead avg<br><b id="hex">#------</b> · Undertone <b id="undertone">—</b></div>
+  <!-- ===== VIEW 1: WALL ===== -->
+  <div id="vWall">
+    <div class="h">你想變成誰？</div>
+    <div class="sub">選一個 look，我一步步教你畫成這樣</div>
+    <div class="wall">
+      <div class="look" onclick="openLook('linxiang')">
+        <img src="look-linxiang.jpg" alt="林襄">
+        <div class="nm">林襄<small>戀愛氛圍感 · 暖粉水光</small></div>
       </div>
-    </div>
-    <div class="panel">
-      <h3>Face Structure</h3>
-      <div class="kv">Estimated face shape <b id="faceshape">—</b> · Length-to-width ratio <b id="ratio">—</b></div>
-    </div>
-    <div class="panel">
-      <h3>Makeup Advice</h3>
-      <ul id="advice" class="advice"></ul>
+      <div class="look soon"><div class="ph">mizuki<br>（即將推出）</div><div class="nm">95_mizuki<small>戀愛感（soon）</small></div></div>
+      <div class="look soon"><div class="ph">+ 你的目標<br>（即將推出）</div><div class="nm">上傳你想要的<small>逆向拆解（soon）</small></div></div>
+      <div class="look soon"><div class="ph">韓系清透<br>（即將推出）</div><div class="nm">Clean Girl<small>soon</small></div></div>
     </div>
   </div>
 
-  <div class="disclaim">
-    ⚠️ Marker positions computed from MediaPipe FaceMesh (478 landmarks). Color recommendations are rule-based — professional color matching not yet integrated. All processing runs client-side on your device; photos are never uploaded or stored.
+  <!-- ===== VIEW 2: TARGET ===== -->
+  <div id="vTarget" class="hidden">
+    <div class="h">你想變成這個 look</div>
+    <div class="sub" id="tSub">林襄 · 戀愛氛圍感</div>
+    <div class="hero"><img id="tImg" src="look-linxiang.jpg" alt="target"></div>
+    <div class="tcta">
+      <button class="btn" onclick="startTeach()">📸 教我畫成這樣 →</button>
+      <button class="btn ghost" onclick="showWall()">← 換一個 look</button>
+    </div>
   </div>
 
-  <!-- ✨ v3.29: waitlist capture — hidden until Formspree endpoint wired + product ready for traffic -->
-  <div class="cta" style="display:none">
-    <h3>Want Suimira for your own face?</h3>
-    <p>This is an early prototype. Join the early-access list — be first when the full app + smart mirror launch.</p>
-    <form id="waitForm" action="https://formspree.io/f/mwvzzqay" method="POST">
-      <input type="email" name="email" placeholder="your@email.com" required>
-      <input type="hidden" name="_subject" value="New Suimira waitlist signup">
-      <button type="submit">Join the waitlist →</button>
-    </form>
-    <p id="waitMsg" class="ok" style="display:none;">🤍 You're on the list — thank you!</p>
+  <!-- ===== VIEW 3: TEACH ===== -->
+  <div id="vTeach" class="hidden">
+    <div class="h" style="font-size:18px;">跟著畫 · 林襄戀愛感</div>
+    <div class="stage">
+      <video id="video" playsinline muted></video>
+      <canvas id="cv"></canvas>
+      <div class="stagehint" id="hint">點下面開始 → 打開前鏡頭</div>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="card">
+      <div class="stepnum" id="sNum">STEP 1 / 8</div>
+      <div class="stepname" id="sName">—</div>
+      <div class="where" id="sWhere">—</div>
+      <span class="sku" id="sSku"></span>
+    </div>
+    <div class="nav">
+      <button id="prev" onclick="step(-1)">‹ 上一步</button>
+      <button id="next" class="primary" onclick="step(1)">下一步 ›</button>
+    </div>
+    <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
   </div>
-  <script>
-    (function(){
-      var f=document.getElementById('waitForm');
-      if(!f) return;
-      f.addEventListener('submit',function(e){
-        if(f.action.indexOf('FORMSPREE_ENDPOINT_HERE')>-1){return;} /* not wired yet → normal post */
-        e.preventDefault();
-        fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
-          .then(function(){f.style.display='none';document.getElementById('waitMsg').style.display='block';})
-          .catch(function(){f.submit();});
-      });
-    })();
-  </script>
 </div>
 
 <script>
-let FaceLandmarker, FilesetResolver;
+const $=id=>document.getElementById(id);
+let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,lastLm=null;
 
-const $ = id => document.getElementById(id);
-const statusEl = $('status');
-const setStatus = (t, busy=false) => statusEl.innerHTML = busy ? `<span class="spin"></span>${t}` : t;
+/* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
+const STEPS=[
+ {key:'base',ic:'🩷',name:'底妝 · 皮膚先好起來',where:'全臉勻底妝、輕提亮——<b>皮膚先乾淨透亮</b>，後面才好看',sku:'Dior 超完美柔光粉底',mode:'base'},
+ {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
+   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
+ {key:'highlight',ic:'✨',name:'打亮（這個 look 的主角）',where:'<b>鼻樑由上往下細掃</b> + 顴骨高點點開，用光做立體',sku:'OFRA Highlighter Cloud9',mode:'sweep',
+   paths:[[6,197,195,5,4],[50,205],[280,425]],color:'#f0d9b8'},
+ {key:'blush',ic:'🌷',name:'腮紅（高位 + 橫過鼻樑）',where:'蘋果肌<b>偏高</b>往太陽穴斜掃、再<b>輕橫過鼻樑</b> → 戀愛感',sku:'Dior 001 + Clinique Pink Pop',mode:'sweep',
+   paths:[[117,118,119,47,100],[346,347,348,277,329]],color:'#ff8fa0'},
+ {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
+   paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
+ {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
+   paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
+ {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'brow',
+   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
+ {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'①唇珠/人中畫小 <b>C</b> 提亮 ②嘴唇<b>中央上色最深</b> → 往邊緣暈淡 ③下唇中央點一點唇蜜 → 嘟嘟立體',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
+];
 
-let landmarker = null, mode = 'upload', stream = null, rafId = null;
-let activeZone = 'preview';
-let stepMode = false;
-let currentStep = 0;
-// ✨ v3.15: 6-zone order with brow (traditional makeup application order)
-const stepOrder = ['contour', 'brow', 'eyeshadow', 'blush', 'highlight', 'lip'];
-const stepNames = {
-  contour: 'Contour',
-  brow: 'Brow',
-  eyeshadow: 'Eyeshadow',
-  blush: 'Blush',
-  highlight: 'Highlight',
-  lip: 'Lip',
-};
-const stepDetails = {
-  contour: {
-    why: 'Contour first: build shadow, define bone structure',
-    tool: '🖌️ Angled / fan brush',
-    product: '2 shades darker than skin, cool brown (avoid orange — looks muddy)',
-    color: 'Cool brown / Taupe',
-    intensity: 'Medium (visible shadow, but not a black line)',
-    apply: [
-      '1️⃣ Cheekbone hollow: sweep diagonally from corner of mouth toward mid-ear (main contour)',
-      '2️⃣ Jawline: chin toward ear, light sweep to soften jaw contour',
-      '3️⃣ Nose sides: vertical light strokes — don\'t go heavy',
-      '4️⃣ Temples: light dusting near hairline to elongate face shape'
-    ],
-    technique: '⚠️ Key: small amount, multiple passes. Tap brush twice on back of hand to shake off excess. Build light to dark — easier to add than subtract.',
-    pressure: '🪶 Pressure: very light first pass, layer again if you need more depth',
-    blend: 'Blend with clean spoolie or fluffy brush 5-10 strokes, no hard edges',
-    timeMin: 5,
-    timeMax: 8
-  },
-  highlight: {
-    why: 'K-beauty Suzy style — dewy glass skin glow',
-    tool: '🖌️ Thin brush + fingertip tap (cream + fingers most natural)',
-    product: 'Cream > powder — dewy texture',
-    color: 'Warm → champagne gold / Cool → cool white pearl / Neutral → off-white',
-    intensity: 'Light (rice-grain size, 1-2 taps)',
-    apply: [
-      '1️⃣ Nose bridge + tip: thin vertical line from between brows to nose tip, light dot on tip',
-      '2️⃣ Cupid bow / philtrum: V-shaped groove between nose and upper lip (don\'t touch the lip!) — just one small dot',
-      '3️⃣ Chin: 1cm directly below lower lip (NOT the chin tip!), small light dab'
-    ],
-    technique: '⚠️ Key: "small reflective points" not large patches. Rice-grain size — small is more natural. Too much = oily / sweat-looking.',
-    pressure: '🪶 Pressure: very light. Tap brush twice on back of hand first, then dab. Cream version — light finger tap.',
-    blend: 'Tap with fingertip 3-5 times to blend',
-    timeMin: 3,
-    timeMax: 5
-  },
-  blush: {
-    why: 'Blush last: after base + dimension is set, add color/life',
-    tool: '🖌️ Large fluffy blush brush (round)',
-    product: 'Cream (beginner-friendly, easy to blend) or powder (depending on skin type)',
-    color: 'Warm → peach / coral / Cool → rose / berry pink / Neutral → natural pink',
-    apply: [
-      '1️⃣ Apple of cheek (one dot each side): smile to find the highest point, circle outward to blend',
-      'Light tap → blend → from apple-of-cheek center sweep toward temple'
-    ],
-    technique: '⚠️ Key: smile first to find the exact center of your apple-of-cheek — that raised spot is your target.',
-    blend: 'Cream: tap with fingertip. Powder: large brush, circular motion to blend',
-    timeMin: 3,
-    timeMax: 5
-  },
-  brow: {
-    why: '野生眉 (natural / wild brow) — follow YOUR hair growth direction, NOT a stamped shape. For sparse/no-brow folks this is critical: 5 hair-stroke directions = 1 brow.',
-    tool: '🖌️ Brow pencil (skin-tone match) + brow powder + spoolie brush + tinted brow gel (optional)',
-    product: 'Pencil = exact shade of your hair (or 1 shade lighter) · Powder = matches pencil · Gel = clear or tinted',
-    color: 'Light brown for blondes / medium brown for brunettes / cool taupe for greys · Asian default = warm brown #7a5a40',
-    intensity: 'Hair-stroke level, NOT a solid block. Build sparsity → fullness gradually.',
-    apply: [
-      '1️⃣ Brush brows UP + OUT with spoolie (against then with hair growth). Reveals shape + sparse spots.',
-      '2️⃣ Hair direction map (野生眉 7 zones front→tail):',
-      '   • FRONT INNER: vertical UP strokes (toward forehead)',
-      '   • FRONT-MID: vertical UP',
-      '   • MID: diagonal UP-OUTWARD (≈ 60° from horizontal)',
-      '   • MID-OUTER: diagonal UP-OUT (≈ 45°)',
-      '   • TAIL: nearly horizontal OUTWARD',
-      '3️⃣ Pencil hair-strokes ONLY in sparse spots — each stroke = ONE hair, ~3mm long, in the direction above. Never solid lines.',
-      '4️⃣ Outline BOTTOM edge of brow lightly to define shape (straight for Korean = no peak; slight arch at outer 1/3 for Western).',
-      '5️⃣ Fill GAPS with powder: small angled brush, dab don\'t sweep. Front LIGHTEST, mid MEDIUM, tail DARKEST.',
-      '6️⃣ Spoolie through 5-8x to soften + blend with real hair direction.',
-      '7️⃣ Tinted/clear brow gel — comb upward + outward to set hair flow.'
-    ],
-    technique: '⚠️ 野生眉 KEY: hair-flow direction matches your real hairs (front=up, mid=diagonal, tail=out). Front lightest, tail darkest. Never solid block — always hair-by-hair strokes.',
-    pressure: '🪶 Pressure: very light hair strokes. Multiple short strokes vs one heavy line.',
-    blend: 'Spoolie through finished brow 5-8 passes — softens everything into natural look',
-    timeMin: 3,
-    timeMax: 5
-  },
-  eyeshadow: {
-    why: 'Eyeshadow in layers — light shade for area, dark shade for depth. Korean technique = pale wash → deep crease',
-    tool: '🖌️ Layer 1: large fluffy brush (light shade) · Layer 2: medium tapered brush (dark shade)',
-    product: 'Earth-tone palette: 2 light shades (cream/peach/beige) + 1 deep shade (brown/taupe/smoky)',
-    color: 'Light = warm beige or peach (transition) · Dark = warm brown or cool taupe (depth)',
-    intensity: 'Layer 1: build slowly (3-5 passes) · Layer 2: just a touch on outer corner',
-    apply: [
-      '1️⃣ Layer 1 (light/transition shade): Take a generous amount on big fluffy brush. Sweep across WHOLE eyelid + slightly above (up to brow bone area). Multiple passes from lash line upward, fading at brow bone. This is the BIG area — covers lid + crease + above.',
-      '2️⃣ Layer 2 (dark/depth shade): Use medium tapered brush. Start at outer corner of upper lash line. Sweep UP into the crease (eye socket dip) — only outer 1/3 of the eyelid. Fade upward and inward until it disappears into Layer 1.',
-      '3️⃣ Inner corner pop (optional): Light shimmer or champagne in the Y-shaped inner corner — brightens eye.',
-      '4️⃣ Blend the boundary: Use clean fluffy brush, soft circular motion at the boundary between Layer 1 and Layer 2 — no hard line.'
-    ],
-    technique: '⚠️ Key: Layer 1 BIG and LIGHT, Layer 2 SMALL and CONCENTRATED at outer. Light + dark contrast = depth.',
-    pressure: '🪶 Pressure: very light. Build slowly. Tap brush twice on back of hand before each application.',
-    blend: 'Clean fluffy brush, soft circular motion at the boundary between light + dark, fade in 5-8 passes',
-    timeMin: 5,
-    timeMax: 10
-  },
-  lip: {
-    why: 'Lip last (so it doesn\'t smudge during other steps). Korean 6-step gradient lip = plump dimensional shape with neutralized base',
-    tool: '🖌️ Lip liner (skin-tone OR muted nude) + lipstick/tint in target color + fingertip or lip brush for blending',
-    product: 'Step 1: powder/concealer to neutralize natural lip color · Step 2-3: skin-tone lip liner · Step 4-5: cream lipstick or tint',
-    color: 'Liner = matches your skin / one shade darker than natural lip · Color = preset target',
-    apply: [
-      '1️⃣ Neutralize natural lip: tap concealer or powder over entire lip — covers natural lip color so target color shows true.',
-      '2️⃣ Draw cupid bow + lower lip outline with liner — sketch the SHAPE you want (slightly fuller than natural OK).',
-      '3️⃣ Deepen the lip bead (cupid bow peak) + INNER of lower lip with liner — small strokes, adds depth.',
-      '4️⃣ Blend in place: fingertip or lip brush, soft circular motion. Smooths liner into a gradient — no harsh line.',
-      '5️⃣ Fill with color: cream lipstick or tint, fill from CENTER outward. Center heavier, edges fade.',
-      '6️⃣ Press lips together to even out. Optional: clear gloss in center for plump 3D effect.'
-    ],
-    technique: '⚠️ Key: 6 steps = plump dimensional lip. Skip step 1 (neutralize) = natural color shows through and ruins color accuracy. Skip step 3 (deepen center) = flat lip with no dimension.',
-    pressure: '🪶 Pressure: liner very light, lipstick medium. Build gradually.',
-    blend: 'Fingertip circular motion at edges; press lips together to even out top + bottom',
-    timeMin: 3,
-    timeMax: 6
-  }
-};
+/* ---- views ---- */
+function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vTeach').classList.add('hidden');}
+function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vTeach').classList.add('hidden');}
+function stopTeach(){showWall();}
 
-let lastLandmarks = null, lastImageSize = null;
-
+/* ---- MediaPipe ---- */
 async function initModel(){
-  if (landmarker) return landmarker;
-  setStatus('Loading AI model… (takes a few seconds on first load)', true);
-  try{
-    if(!FaceLandmarker){
-      const mod = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");
-      FaceLandmarker = mod.FaceLandmarker; FilesetResolver = mod.FilesetResolver;
-    }
-  }catch(e){
-    setStatus('AI library failed to load (check network): '+e.message);
-    throw e;
-  }
-  const fileset = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
-  );
-  landmarker = await FaceLandmarker.createFromOptions(fileset, {
-    baseOptions:{
-      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-      delegate:"GPU"
-    },
-    runningMode: mode==='live' ? "VIDEO" : "IMAGE",
-    numFaces:1
-  });
-  setStatus('');
-  return landmarker;
+  if(landmarker)return landmarker;
+  setStatus('載入 AI 模型中…（第一次幾秒）',true);
+  if(!FaceLandmarker){const m=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");FaceLandmarker=m.FaceLandmarker;FilesetResolver=m.FilesetResolver;}
+  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+  landmarker=await FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numFaces:1});
+  setStatus('');return landmarker;
 }
+function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
 
-/* ✨ v1: 精確點位定義 + 編號
-   每個 zone 是一個 ordered list of points
-   每個 point: { idx: landmark_index, label: number/string, side: 'L'/'R'/'C' }
-   減少 overlapping 區域 - 每個位置只屬一個 zone
-*/
-/* ✨ v3: PRESETS — 4 風格、每個有自己的 marker positions / colors / sizes
-   架構 = v1 sparse landmark markers (跟臉移動)、不是 v2 全臉色膜
-   每個 preset = {highlight, contour, blush, eyeshadow, lip} 5 個 zone
-*/
-
-// 共用 landmark positions (避免重複)
-// ✨ v3.1: 加入 pro-grade highlight 位置（對齊 Korean tutorial IMG_0854-0859）
-const POS = {
-  // ─── FACE OVAL (for Meitu-style filter masking) ───
-  // MediaPipe FACEMESH_FACE_OVAL closed loop
-  faceOval: [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109],
-
-  // ─── HIGHLIGHT 提亮 ───
-  noseBridge:    [6, 197, 195, 5, 4],               // 鼻樑 vertical
-  philtrum:      [164, 0],                          // 人中 V 字
-  chinHorizontal:[194, 201, 200, 421, 418],         // 下巴橫線
-  // ★ NEW v3.1: 大三角眼下提亮（pro 都標、beginner 漏）
-  underEyeTriangleL: [133, 112, 47, 100, 119, 230, 232, 244],  // 左眼下大三角（多點 oval）
-  underEyeTriangleR: [362, 341, 277, 329, 348, 450, 452, 464], // 右眼下大三角
-  // ★ FIXED v3.16: 卧蠶 (aegyo-sal) — 橫向細 oval 沿 lower lash line
-  // 之前用三角形 + 23/253 太低跑到 tear trough；現用 3 個 lower lid 點
-  woxianL: [144, 145, 153],           // 左卧蠶 oval 中心 = 下眼瞼正下方
-  woxianR: [373, 374, 380],           // 右卧蠶 oval 中心
-  // (deprecated v3.2-v3.12 triangle landmarks kept for ref but not used)
-  triangleL_v3: [144, 145, 153],
-  triangleR_v3: [373, 374, 380],
-  // ★ NEW v3.2: 包覆鼻翼 curve（給 drawWrap 用、quadratic curve）
-  noseWrapL_v3: [129, 102, 64, 49, 60, 75, 240, 79],   // 左鼻翼下緣包覆
-  noseWrapR_v3: [358, 331, 294, 279, 290, 305, 460, 309], // 右鼻翼下緣包覆
-  // ★ NEW v3.1: 眉骨下方提亮（pro 必有）
-  browBoneL:     [55, 65, 52, 53],
-  browBoneR:     [285, 295, 282, 283],
-  // ★ NEW v3.1 → fixed v3.7: 額頭最高處（不要包眉間、避免 cream blob 落到眉毛上）
-  foreheadCenter: [10, 151],
-  // 蘋果肌高點提亮（已有但保留作 alt）
-  cheekHighL:    [205, 50, 187],
-  cheekHighR:    [425, 280, 411],
-  innerEyeL:     [133],
-  innerEyeR:     [362],
-
-  // ─── CONTOUR / SHADOW 修容 ───
-  cheekboneSweepL: [234, 93, 132, 58, 50],
-  cheekboneSweepR: [454, 323, 361, 288, 280],
-  jawL:          [172, 136, 150, 149],
-  jawR:          [397, 365, 379, 378],
-  noseSideL:     [193, 122, 196, 198],
-  noseSideR:     [417, 351, 419, 420],
-  templeL:       [21, 54, 103],
-  templeR:       [251, 284, 332],
-  // ★ NEW v3.1 → fixed v3.4: 髮際 shadow split L/R (no bowtie cross)
-  hairlineShadowL: [103, 67, 109, 10],   // 左太陽穴 → 額頭頂中央
-  hairlineShadowR: [10, 338, 297, 332],  // 額頭頂中央 → 右太陽穴
-
-  // ─── BLUSH 腮紅 ───
-  appleL_big:    [117, 118, 119, 47, 100],
-  appleR_big:    [346, 347, 348, 277, 329],
-  appleL_small:  [50, 205],
-  appleR_small:  [280, 425],
-
-  // ─── EYESHADOW 眼影 ───
-  upperLidL:     [27, 28, 29, 30, 56, 190],
-  upperLidR:     [257, 258, 259, 260, 286, 414],
-  outerLidL:     [33, 7, 163],
-  outerLidR:     [263, 249, 390],
-
-  // ─── BROWS 眉毛 (closed polygon outline — looks like actual brow shape) ───
-  // v3.22: closed polygon = top edge + bottom edge (clockwise around brow)
-  // Top L: 70(outer), 63, 105, 66, 107(inner) — outer → inner
-  // Bottom L: 55(inner), 65, 52, 53, 46(outer) — inner → outer
-  // Polygon: top outer → top inner → bottom inner → bottom outer → close
-  browL_poly: [70, 63, 105, 66, 107, 55, 65, 52, 53, 46],
-  browR_poly: [336, 296, 334, 293, 300, 285, 295, 282, 283, 276],
-
-  // ─── 卧蠶 (aegyo-sal pocket) ───
-  // v3.23 drawAegyoSal uses [eye-inner, eye-outer, lower-lid-mid] to build
-  // horizontal pillow at correct width + position
-  aegyoL: [133, 33, 145],   // L: inner corner, outer corner, lower lid below pupil
-  aegyoR: [362, 263, 374],  // R: same logic
-
-  // ─── LIP 唇 ───
-  lipsCenter:    [13, 14, 0, 17],
-  lipsOuter:     [61, 291, 0, 17],
-};
-
-const PRESETS = {
-  sweet: {
-    name: '🍑 Korean Warm Pink Sparkle',
-    desc: 'Warm pink + aegyo-sal (under-eye glow) + tinted lip + warm brown smoky outer eye + pro-grade highlight',
-    zones: {
-      highlight: { color: '#7fd1e0', label: 'Highlight (pro)', strokes: [
-        // v3.2: 三角形 highlight under-eye (pro 真的這樣畫)
-        { shape:'triangle', pts: POS.triangleL_v3 },                  // ★ 大三角眼下
-        { shape:'triangle', pts: POS.triangleR_v3 },
-        // v3.2: cream blob 額頭 T 字
-        { shape:'cream', pts: POS.foreheadCenter, width: 0.045 },
-        // 眉骨 stroke
-        // browBone removed v3.4 — was rendering above brows (wrong)
-        // 鼻樑線
-        { pts: POS.noseBridge, width: 0.014 },
-        // 人中 + 下巴
-        { pts: POS.philtrum, width: 0.010 },
-        { pts: POS.chinHorizontal, width: 0.018 },
-        // v3.2: cream blob 蘋果肌
-        { shape:'cream', pts: POS.cheekHighL, width: 0.032 },
-        { shape:'cream', pts: POS.cheekHighR, width: 0.032 },
-      ]},
-      contour: { color: '#c98fe8', label: 'Contour (soft cheekbone hollow)', strokes: [
-        // v3.19: cream blob shadows like blush (no more line "outlines")
-        { shape:'cream', pts: POS.cheekboneSweepL, width: 0.040 },
-        { shape:'cream', pts: POS.cheekboneSweepR, width: 0.040 },
-        // 鼻側 subtle wrap
-        { shape:'wrap', pts: POS.noseWrapL_v3, width: 0.008 },
-        { shape:'wrap', pts: POS.noseWrapR_v3, width: 0.008 },
-      ]},
-      blush: { color: '#ff7a96', label: 'Blush', strokes: [
-        { pts: POS.appleL_big, width: 0.075, fill: 'oval' },
-        { pts: POS.appleR_big, width: 0.075, fill: 'oval' },
-      ]},
-      eyeshadow: { color: '#e8c8a8', label: 'Eyeshadow (1️⃣ light wash → 2️⃣ dark crease)', strokes: [
-        // Layer 1: LIGHT (warm beige) — BIG oval covering whole lid + above
-        { shape:'oval', pts: POS.upperLidL, width: 0.045, color: '#e8c8a8' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.045, color: '#e8c8a8' },
-        // Layer 2: DARK (warm brown) — SMALL oval at outer corner / crease
-        { shape:'oval', pts: POS.outerLidL, width: 0.025, color: '#9a6856' },
-        { shape:'oval', pts: POS.outerLidR, width: 0.025, color: '#9a6856' },
-      ]},
-      lip: { color: '#d76a78', label: 'Lip (pink-coral tint)', strokes: [
-        { pts: POS.lipsCenter, width: 0.022, fill: 'oval' },
-      ]},
-      brow: { color: '#5a3e2a', label: 'Brow (warm brown - visible)', strokes: [
-        // v3.22: closed polygon outlines actual brow shape (not sausage worm)
-        { shape:'polygon', pts: POS.browL_poly },
-        { shape:'polygon', pts: POS.browR_poly },
-      ]},
-    },
-  },
-  bold: {
-    name: '🍓 Coral Tinted Lip',
-    desc: 'Coral-red tinted lip + brown smoky lid + subtle aegyo-sal + pro-grade highlight + bare-skin look',
-    zones: {
-      highlight: { color: '#7fd1e0', label: 'Highlight (nose + eyes focus)', strokes: [
-        // v3.23 卧蠶 = proper horizontal pillow (drawAegyoSal handles shape internally)
-        { shape:'aegyo', pts: POS.aegyoL, color: '#e8b890' },
-        { shape:'aegyo', pts: POS.aegyoR, color: '#e8b890' },
-        { pts: POS.noseBridge, width: 0.018 },
-        { pts: POS.innerEyeL, width: 0.012 },
-        { pts: POS.innerEyeR, width: 0.012 },
-        // REMOVED v3.12: forehead + cheek cream blobs
-      ]},
-      contour: { color: '#c98fe8', label: 'Contour', strokes: [
-        { pts: POS.cheekboneSweepL, width: 0.018 },
-        { pts: POS.cheekboneSweepR, width: 0.018 },
-        { shape:'wrap', pts: POS.noseWrapL_v3, width: 0.010 },
-        { shape:'wrap', pts: POS.noseWrapR_v3, width: 0.010 },
-        { shape:'wrap', pts: POS.hairlineShadowL, width: 0.011 },
-        { shape:'wrap', pts: POS.hairlineShadowR, width: 0.011 },
-        { pts: POS.jawL, width: 0.008 },
-        { pts: POS.jawR, width: 0.008 },
-      ]},
-      blush: { color: '#ff8a80', label: 'Blush (coral)', strokes: [
-        { pts: POS.appleL_small, width: 0.050, fill: 'oval' },
-        { pts: POS.appleR_small, width: 0.050, fill: 'oval' },
-      ]},
-      eyeshadow: { color: '#d8b09a', label: 'Eyeshadow (1️⃣ peach wash → 2️⃣ deep smoky)', strokes: [
-        { shape:'oval', pts: POS.upperLidL, width: 0.045, color: '#d8b09a' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.045, color: '#d8b09a' },
-        { shape:'oval', pts: POS.outerLidL, width: 0.028, color: '#6a3f30' },
-        { shape:'oval', pts: POS.outerLidR, width: 0.028, color: '#6a3f30' },
-      ]},
-      lip: { color: '#d75850', label: 'Lip (coral tint)', strokes: [
-        { pts: POS.lipsCenter, width: 0.028, fill: 'oval' },
-      ]},
-      brow: { color: '#5e3f2c', label: 'Brow (defined warm brown filled)', strokes: [
-        { shape:'polygon', pts: POS.browL_poly },
-        { shape:'polygon', pts: POS.browR_poly },
-      ]},
-    },
-  },
-  kpop: {
-    name: '❄️ K-pop Clean Girl',
-    desc: 'Cool skin tone + glass skin + subtle blush + straight brows + matte rosewood lip + pro-grade glow',
-    zones: {
-      highlight: { color: '#7fd1e0', label: 'Highlight (glass skin: nose + eyes + chin)', strokes: [
-        // K-pop glass skin v3.12: focus same nose + eyes
-        // v3.23 卧蠶 = proper horizontal pillow (drawAegyoSal handles shape internally)
-        { shape:'aegyo', pts: POS.aegyoL, color: '#e8b890' },
-        { shape:'aegyo', pts: POS.aegyoR, color: '#e8b890' },
-        { pts: POS.noseBridge, width: 0.022 },     // strong nose bridge
-        { pts: POS.innerEyeL, width: 0.012 },
-        { pts: POS.innerEyeR, width: 0.012 },
-        { pts: POS.philtrum, width: 0.010 },
-        { pts: POS.chinHorizontal, width: 0.016 },
-        // REMOVED v3.12: forehead cream + cheek cream
-      ]},
-      contour: { color: '#c98fe8', label: 'Contour (very subtle cream)', strokes: [
-        { shape:'cream', pts: POS.cheekboneSweepL, width: 0.028 },
-        { shape:'cream', pts: POS.cheekboneSweepR, width: 0.028 },
-        { shape:'wrap', pts: POS.noseWrapL_v3, width: 0.006 },
-        { shape:'wrap', pts: POS.noseWrapR_v3, width: 0.006 },
-      ]},
-      blush: { color: '#e88aa8', label: 'Blush (cool rose)', strokes: [
-        { pts: POS.appleL_small, width: 0.055, fill: 'oval' },
-        { pts: POS.appleR_small, width: 0.055, fill: 'oval' },
-      ]},
-      eyeshadow: { color: '#d4c0b0', label: 'Eyeshadow (1️⃣ cool beige wash → 2️⃣ taupe crease)', strokes: [
-        { shape:'oval', pts: POS.upperLidL, width: 0.040, color: '#d4c0b0' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.040, color: '#d4c0b0' },
-        { shape:'oval', pts: POS.outerLidL, width: 0.022, color: '#8a7060' },
-        { shape:'oval', pts: POS.outerLidR, width: 0.022, color: '#8a7060' },
-      ]},
-      lip: { color: '#b06870', label: 'Lip (matte rosewood)', strokes: [
-        { pts: POS.lipsCenter, width: 0.022, fill: 'oval' },
-      ]},
-      brow: { color: '#6a4a35', label: 'Brow (Korean straight medium brown)', strokes: [
-        { shape:'polygon', pts: POS.browL_poly },
-        { shape:'polygon', pts: POS.browR_poly },
-      ]},
-    },
-  },
-  bare: {
-    name: '💧 Bare-Face Glow',
-    desc: 'Healthy and natural — no-makeup look, but with subtle pro-grade highlights',
-    zones: {
-      highlight: { color: '#7fd1e0', label: 'Highlight (very light: nose + eyes)', strokes: [
-        // v3.23 卧蠶 = proper horizontal pillow (drawAegyoSal handles shape internally)
-        { shape:'aegyo', pts: POS.aegyoL, color: '#e8b890' },
-        { shape:'aegyo', pts: POS.aegyoR, color: '#e8b890' },
-        { pts: POS.noseBridge, width: 0.012 },
-        { pts: POS.innerEyeL, width: 0.010 },
-        { pts: POS.innerEyeR, width: 0.010 },
-        // REMOVED v3.12: cheek cream
-      ]},
-      contour: { color: '#c98fe8', label: 'Contour (skipped)', strokes: [
-        // 素顏感 = 沒有修容
-      ]},
-      blush: { color: '#ff95a0', label: 'Blush (fingertip dab)', strokes: [
-        { pts: POS.appleL_small, width: 0.050, fill: 'oval' },
-        { pts: POS.appleR_small, width: 0.050, fill: 'oval' },
-      ]},
-      eyeshadow: { color: '#d8c5b0', label: 'Eyeshadow (single neutral wash)', strokes: [
-        // Bare-face = only ONE light wash, no dark layer
-        { shape:'oval', pts: POS.upperLidL, width: 0.035, color: '#d8c5b0' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.035, color: '#d8c5b0' },
-      ]},
-      lip: { color: '#d08879', label: 'Lip (clear balm)', strokes: [
-        { pts: POS.lipsCenter, width: 0.018, fill: 'oval' },
-      ]},
-      brow: { color: '#7a6450', label: 'Brow (brushed natural shape)', strokes: [
-        { shape:'polygon', pts: POS.browL_poly },
-        { shape:'polygon', pts: POS.browR_poly },
-      ]},
-    },
-  },
-};
-
-// 當前 active preset (mutable)
-let activePreset = 'sweet';
-// Compat: 舊 code 讀 ZONES、轉 proxy 到 active preset 的 zones
-const ZONES = new Proxy({}, {
-  get(_, key) { return PRESETS[activePreset].zones[key]; }
-});
-
-/* ✨ v1.3: STROKE / AREA rendering — 整片完整 application zone */
-
-// ✨ v1.4: 用 path stroke + shadow blur, 透明度 match 腮紅 level
-// 一次 draw, 不是 30 overlapping circles (太密)
-function drawStroke(ctx, lm, pts, color, widthRatio, w, h){
-  const width = Math.max(w, h) * widthRatio;
-  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length < 1) return;
-
-  if (coords.length === 1) {
-    // Single point: small radial gradient
-    const x = coords[0].x, y = coords[0].y;
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
-    grad.addColorStop(0, color + '66');  // ~40% (was 'aa' 67%)
-    grad.addColorStop(0.5, color + '22');
-    grad.addColorStop(1, color + '00');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, width, 0, Math.PI * 2);
-    ctx.fill();
-    return;
-  }
-
-  // Multi-point path: use lineWidth + shadow blur for soft edge
-  ctx.save();
-  ctx.strokeStyle = color + '40'; // v3.17: 33% → 25% alpha (less mask outline glow)
-  ctx.lineWidth = width * 0.9;  // v3.5: 1.5→0.9 thinner for precision
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.shadowColor = color;
-  ctx.shadowBlur = width * 1.2;
-  ctx.beginPath();
-  coords.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.stroke();
-  ctx.restore();
-}
-
-// Draw oval (for blush apple cheek)
-function drawOval(ctx, lm, pts, color, widthRatio, w, h){
-  const width = Math.max(w, h) * widthRatio;
-  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length === 0) return;
-  // Center = average of points
-  const cx = coords.reduce((a, p) => a + p.x, 0) / coords.length;
-  const cy = coords.reduce((a, p) => a + p.y, 0) / coords.length;
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, width);
-  grad.addColorStop(0, color + 'bb');
-  grad.addColorStop(0.5, color + '55');
-  grad.addColorStop(1, color + '00');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.arc(cx, cy, width, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-// ✨ v3.23: drawAegyoSal — horizontal thin pillow under eye (proper 卧蠶 shape)
-// Uses 3 points to define eye width: inner-eye, outer-eye, pupil-bottom
-// Renders a horizontal elongated ellipse with top-highlight + bottom-shadow gradient
-function drawAegyoSal(ctx, lm, indices, color, w, h){
-  if (!indices || indices.length < 3) return;
-  const coords = indices.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length < 3) return;
-  // Use first 2 points to determine eye width, 3rd to determine vertical position
-  const cx = (coords[0].x + coords[1].x) / 2;
-  const cy = coords[2] ? coords[2].y : (coords[0].y + coords[1].y) / 2;
-  const eyeWidth = Math.hypot(coords[1].x - coords[0].x, coords[1].y - coords[0].y);
-  const rx = eyeWidth * 0.55;     // horizontal radius = ~half eye width
-  const ry = eyeWidth * 0.13;     // vertical radius = thin band
-  ctx.save();
-  // Bottom shadow gradient (darker peach/tan)
-  const shadowGrad = ctx.createRadialGradient(cx, cy + ry*0.3, 0, cx, cy + ry*0.3, rx*1.1);
-  shadowGrad.addColorStop(0, color + '99');
-  shadowGrad.addColorStop(0.5, color + '55');
-  shadowGrad.addColorStop(1, color + '00');
-  ctx.fillStyle = shadowGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + ry*0.3, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Top pearl highlight (bright cream)
-  const pearlGrad = ctx.createRadialGradient(cx, cy - ry*0.3, 0, cx, cy - ry*0.3, rx*0.7);
-  pearlGrad.addColorStop(0, 'rgba(255, 248, 232, 0.85)');
-  pearlGrad.addColorStop(0.6, 'rgba(255, 248, 232, 0.3)');
-  pearlGrad.addColorStop(1, 'rgba(255, 248, 232, 0)');
-  ctx.fillStyle = pearlGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy - ry*0.3, rx*0.85, ry*0.6, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-// ✨ v3.22: drawPolygon — closed filled polygon (for brow shape outlining)
-// Used to fill the actual ANATOMICAL shape of brow instead of a fat sausage stroke
-function drawPolygon(ctx, lm, indices, color, w, h){
-  if (!indices || indices.length < 3) return;
-  const coords = indices.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length < 3) return;
-  ctx.save();
-  // v3.24: stronger fill + outline so brow visible + distinct from blush
-  ctx.beginPath();
-  coords.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-  ctx.closePath();
-  ctx.fillStyle = color + 'd0';   // 82% alpha (was 53%) — solid brow color
-  ctx.fill();
-  ctx.strokeStyle = color + 'ff';
-  ctx.lineWidth = Math.max(w, h) * 0.002;
-  ctx.stroke();
-  ctx.restore();
-}
-
-// ✨ v3.2: Triangle highlight — for under-eye + cupid bow (pro-grade shape)
-// 3 點構成三角形、漸層填充 (中心亮、邊緣淡)
-function drawTriangle(ctx, lm, indices, color, w, h){
-  if (!indices || indices.length < 3) return;
-  const coords = indices.slice(0, 3).map(i => lm[i]).filter(p => p);
-  if (coords.length < 3) return;
-  const [a, b, c] = coords.map(p => ({x: p.x * w, y: p.y * h}));
-  const cx = (a.x + b.x + c.x) / 3;
-  const cy = (a.y + b.y + c.y) / 3;
-  const r = Math.max(
-    Math.hypot(a.x - cx, a.y - cy),
-    Math.hypot(b.x - cx, b.y - cy),
-    Math.hypot(c.x - cx, c.y - cy)
-  );
-  ctx.save();
-  // Triangle clip + radial gradient fill
-  ctx.beginPath();
-  ctx.moveTo(a.x, a.y);
-  ctx.lineTo(b.x, b.y);
-  ctx.lineTo(c.x, c.y);
-  ctx.closePath();
-  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  grad.addColorStop(0, color + 'aa');
-  grad.addColorStop(0.5, color + '66');
-  grad.addColorStop(1, color + '11');
-  ctx.fillStyle = grad;
-  ctx.fill();
-  // Subtle dashed outline so user 看到「這是三角形」
-  ctx.strokeStyle = color + 'cc';
-  ctx.lineWidth = Math.max(w, h) * 0.0025;
-  ctx.setLineDash([6, 4]);
-  ctx.stroke();
-  ctx.restore();
-}
-
-// ✨ v3.2: Wrap-around curve — for nose sides 包覆鼻翼 (curves around the nostril)
-// 用 quadratic curve、漸層 stroke、模擬「沿著鼻翼下緣畫」
-function drawWrap(ctx, lm, indices, color, widthRatio, w, h){
-  if (!indices || indices.length < 3) return;
-  const coords = indices.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length < 3) return;
-  const width = Math.max(w, h) * widthRatio;
-  ctx.save();
-  ctx.strokeStyle = color + '55'; // v3.17: wrap alpha 53% → 33%
-  ctx.lineWidth = width * 0.8;  // v3.5: 1.2→0.8 thinner for precision
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.shadowColor = color;
-  ctx.shadowBlur = width * 1.5;
-  ctx.beginPath();
-  ctx.moveTo(coords[0].x, coords[0].y);
-  // Use quadratic curves between each pair of points for smooth wrap
-  for (let i = 1; i < coords.length - 1; i++) {
-    const xc = (coords[i].x + coords[i+1].x) / 2;
-    const yc = (coords[i].y + coords[i+1].y) / 2;
-    ctx.quadraticCurveTo(coords[i].x, coords[i].y, xc, yc);
-  }
-  ctx.lineTo(coords[coords.length-1].x, coords[coords.length-1].y);
-  ctx.stroke();
-  ctx.restore();
-}
-
-// ✨ v3.2: Cream blob — irregular oval (like dabbed cream highlight on cheek)
-// 中心極亮 + 漸層淡邊、模擬「霜狀高光點按上去」的形狀
-function drawCreamBlob(ctx, lm, indices, color, widthRatio, w, h){
-  if (!indices || indices.length === 0) return;
-  const coords = indices.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length === 0) return;
-  const cx = coords.reduce((a, p) => a + p.x, 0) / coords.length;
-  const cy = coords.reduce((a, p) => a + p.y, 0) / coords.length;
-  const rx = Math.max(w, h) * widthRatio;
-  const ry = rx * 0.7;  // 橢圓、不是正圓 (更像 cream dab)
-  ctx.save();
-  ctx.translate(cx, cy);
-  // Slight rotation for natural shape
-  const angle = Math.atan2(coords[coords.length-1].y - coords[0].y, coords[coords.length-1].x - coords[0].x);
-  ctx.rotate(angle);
-  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-  grad.addColorStop(0, color + 'cc');
-  grad.addColorStop(0.4, color + '77');
-  grad.addColorStop(1, color + '00');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
-}
-
-// ✨ v3.6: PRESET preview = Meitu-style FILTER applied to face
-// Process:
-//  1. Build face oval mask (limits all effects to face only, no background tint)
-//  2. Soft skin smoothing (face only) — like Meitu's 磨皮
-//  3. Warm tint overlay (face only)
-//  4. Heavier saturated zone overlays (cheek/lip/eye/highlight) — looks like filter
-//
-// Result: face transforms like opening Meitu and tapping a filter chip.
-function drawPresetPreview(ctx, lm, w, h){
-  const z = PRESETS[activePreset].zones;
-  const presetWarmth = PRESET_WARMTH[activePreset] || [240, 200, 200];
-  const presetWarmthAlpha = 0.12;
-
-  // ── 1. Build face oval mask (face only — no background bleed) ──
-  const faceMask = buildFaceOvalMask(lm, w, h);
-
-  // ── 2. Skin smoothing — blur source, mask to face, composite ──
-  // (skip in live mode for perf; do it in upload mode)
-  if (mode === 'upload') applySkinSmoothing(ctx, faceMask, w, h, 4);
-
-  // ── 3. Warm tint overlay (face only) ──
-  ctx.save();
-  ctx.globalAlpha = presetWarmthAlpha;
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = `rgb(${presetWarmth[0]},${presetWarmth[1]},${presetWarmth[2]})`;
-  ctx.drawImage(maskedFill(faceMask, ctx.fillStyle, w, h), 0, 0);
-  ctx.restore();
-
-  // ── 4. Zone overlays (heavier alpha + wider than markers, but face-masked) ──
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.55;
-  for (const stroke of z.contour.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.contour.color, w, h, 'soft');
-  ctx.restore();
-
-  // v3.24: brow pass — source-over blend (keep brow brown distinct, not washed by multiply)
-  if (z.brow) {
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 0.85;
-    for (const stroke of z.brow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.brow.color, w, h, 'soft');
-    ctx.restore();
-  }
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.60;
-  for (const stroke of z.eyeshadow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.eyeshadow.color, w, h, 'soft');
-  ctx.restore();
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'overlay';
-  ctx.globalAlpha = 0.70;
-  for (const stroke of z.blush.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.blush.color, w, h, 'feathered');
-  ctx.restore();
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = 0.55;
-  for (const stroke of z.highlight.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.highlight.color, w, h, 'soft');
-  ctx.restore();
-
-  ctx.save();
-  ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.80;
-  for (const stroke of z.lip.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.lip.color, w, h, 'feathered');
-  ctx.restore();
-}
-
-// ── Helper: build face oval mask canvas (white inside face, transparent outside)
-function buildFaceOvalMask(lm, w, h){
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const cctx = c.getContext('2d');
-  cctx.fillStyle = '#fff';
-  cctx.beginPath();
-  POS.faceOval.forEach((idx, i) => {
-    const p = lm[idx]; if (!p) return;
-    const x = p.x * w, y = p.y * h;
-    i === 0 ? cctx.moveTo(x, y) : cctx.lineTo(x, y);
-  });
-  cctx.closePath();
-  cctx.fill();
-  // Feather edge so blur doesn't have hard boundary
-  cctx.filter = 'blur(6px)';
-  cctx.drawImage(c, 0, 0);
-  cctx.filter = 'none';
-  return c;
-}
-
-// ── Helper: skin smoothing — blur source, paint masked to face ──
-function applySkinSmoothing(ctx, faceMask, w, h, blurPx){
-  // Get current canvas state (the source image already drawn)
-  const tmp = document.createElement('canvas');
-  tmp.width = w; tmp.height = h;
-  const tctx = tmp.getContext('2d');
-  // Copy source
-  tctx.drawImage(ctx.canvas, 0, 0);
-  // Blur the copy
-  const blurred = document.createElement('canvas');
-  blurred.width = w; blurred.height = h;
-  const bctx = blurred.getContext('2d');
-  bctx.filter = `blur(${blurPx}px)`;
-  bctx.drawImage(tmp, 0, 0);
-  // Mask blur to face only
-  bctx.globalCompositeOperation = 'destination-in';
-  bctx.drawImage(faceMask, 0, 0);
-  // Composite blurred face back onto main canvas
-  ctx.save();
-  ctx.globalAlpha = 0.85;
-  ctx.drawImage(blurred, 0, 0);
-  ctx.restore();
-}
-
-// ── Helper: fill a color masked by face oval ──
-function maskedFill(faceMask, fillStyle, w, h){
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  const cctx = c.getContext('2d');
-  cctx.fillStyle = fillStyle;
-  cctx.fillRect(0, 0, w, h);
-  cctx.globalCompositeOperation = 'destination-in';
-  cctx.drawImage(faceMask, 0, 0);
-  return c;
-}
-
-// Preset warm tint colors (per preset aesthetic)
-const PRESET_WARMTH = {
-  sweet: [250, 210, 215],  // 暖粉
-  bold:  [248, 200, 200],  // 暖橘紅
-  kpop:  [225, 220, 230],  // 冷玻璃
-  bare:  [240, 220, 215],  // 淡暖
-};
-
-// Helper: draws preview stroke with softer/wider rendering
-// v3.5: width 收細、避免蓋到旁邊區域、增加 placement precision
-function drawPreviewStroke(ctx, lm, stroke, color, w, h, mode){
-  const shape = stroke.shape || stroke.fill;
-  // v3.9: stroke-level color override (eg eyeshadow layered shades)
-  color = stroke.color || color;
-  // v3.5: widthBoost
-  const widthBoost = mode === 'feathered' ? 0.85 : 0.75;
-  if (shape === 'triangle') {
-    drawTriangle(ctx, lm, stroke.pts, color, w, h);
-  } else if (shape === 'wrap') {
-    drawWrap(ctx, lm, stroke.pts, color, (stroke.width || 0.012) * widthBoost, w, h);
-  } else if (shape === 'cream' || shape === 'blob') {
-    drawCreamBlob(ctx, lm, stroke.pts, color, (stroke.width || 0.025) * widthBoost, w, h);
-  } else if (shape === 'oval') {
-    drawOval(ctx, lm, stroke.pts, color, (stroke.width || 0.05) * widthBoost, w, h);
-  } else {
-    drawStroke(ctx, lm, stroke.pts, color, (stroke.width || 0.02) * widthBoost, w, h);
-  }
-}
-
-function drawOverlay(ctx, lm, w, h){
-  // v3: All 5 layers for active preset
-  const ALL_LAYERS = ['contour', 'brow', 'eyeshadow', 'blush', 'highlight', 'lip'];
-  let zonesToDraw = [];
-
-  // ✨ v3.3: PREVIEW mode = simulate finished makeup look
-  if (activeZone === 'preview') {
-    drawPresetPreview(ctx, lm, w, h);
-    // v3.15: no canvas banner — preset name shown in chip above canvas
-    return;
-  }
-
-  if (activeZone === 'all') {
-    zonesToDraw = ALL_LAYERS;
-  } else if (activeZone === 'step') {
-    // v3.20: build-up step mode — show all previous steps + current step
-    // Step 1: only contour. Step 2: contour + brow. Step 3: + eyeshadow. ... Step 6: all
-    zonesToDraw = stepOrder.slice(0, currentStep + 1);
-  } else {
-    zonesToDraw = [activeZone];
-  }
-
-  // ✨ v3.2: dispatch by shape (triangle / wrap / cream-blob / oval / stroke)
-  for (const key of zonesToDraw) {
-    const z = ZONES[key];
-    if (!z || !z.strokes) continue;
-    for (const stroke of z.strokes) {
-      const shape = stroke.shape || stroke.fill;  // back-compat with 'fill: oval'
-      // v3.9: allow stroke-level color override for multi-layer zones (eyeshadow etc)
-      const stColor = stroke.color || z.color;
-      if (shape === 'aegyo') {
-        drawAegyoSal(ctx, lm, stroke.pts, stColor, w, h);
-      } else if (shape === 'polygon') {
-        drawPolygon(ctx, lm, stroke.pts, stColor, w, h);
-      } else if (shape === 'triangle') {
-        drawTriangle(ctx, lm, stroke.pts, stColor, w, h);
-      } else if (shape === 'wrap') {
-        drawWrap(ctx, lm, stroke.pts, stColor, stroke.width || 0.012, w, h);
-      } else if (shape === 'cream' || shape === 'blob') {
-        drawCreamBlob(ctx, lm, stroke.pts, stColor, stroke.width || 0.025, w, h);
-      } else if (shape === 'oval') {
-        drawOval(ctx, lm, stroke.pts, stColor, stroke.width, w, h);
-      } else {
-        drawStroke(ctx, lm, stroke.pts, stColor, stroke.width, w, h);
-      }
-    }
-  }
-
-  // v3.15: banner text REMOVED — was mirroring in webcam selfie mode + distracting
-  // Preset name now shown via HTML chip selector (already visible above canvas).
-  // Step info shown in HTML stepbar below.
-}
-
-/* ✨ v1.3: 上妝後預覽 — 用 stroke paths + blend modes 模擬實際效果 */
-function drawStrokeWithColor(ctx, lm, pts, rgbaInner, rgbaMid, rgbaOuter, widthRatio, w, h){
-  const width = Math.max(w, h) * widthRatio;
-  const coords = pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-  if (coords.length < 1) return;
-  const steps = 30;
-  for (let i = 0; i < coords.length - 1; i++) {
-    const a = coords[i], b = coords[i+1];
-    for (let s = 0; s <= steps; s++) {
-      const t = s / steps;
-      const x = a.x + (b.x - a.x) * t;
-      const y = a.y + (b.y - a.y) * t;
-      const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
-      grad.addColorStop(0, rgbaInner);
-      grad.addColorStop(0.5, rgbaMid);
-      grad.addColorStop(1, rgbaOuter);
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(x, y, width, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  if (coords.length === 1) {
-    const x = coords[0].x, y = coords[0].y;
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, width);
-    grad.addColorStop(0, rgbaInner);
-    grad.addColorStop(0.5, rgbaMid);
-    grad.addColorStop(1, rgbaOuter);
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(x, y, width, 0, Math.PI * 2);
-    ctx.fill();
-  }
-}
-
-function drawMakeupPreview(ctx, lm, w, h){
-  // ─── 修容 (Contour) — 'multiply' 加深 ───
-  ctx.globalCompositeOperation = 'multiply';
-  ZONES.contour.strokes.forEach(s => {
-    drawStrokeWithColor(ctx, lm, s.pts,
-      'rgba(150,110,90,0.35)', 'rgba(150,110,90,0.15)', 'rgba(150,110,90,0)',
-      s.width, w, h);
-  });
-
-  // ─── 提亮 (Highlight) — 'screen' 提亮 ───
-  ctx.globalCompositeOperation = 'screen';
-  ZONES.highlight.strokes.forEach(s => {
-    drawStrokeWithColor(ctx, lm, s.pts,
-      'rgba(255,235,200,0.45)', 'rgba(255,235,200,0.2)', 'rgba(255,235,200,0)',
-      s.width, w, h);
-  });
-
-  // ─── 腮紅 (Blush) — 'overlay' 紅暈 ───
-  ctx.globalCompositeOperation = 'overlay';
-  ZONES.blush.strokes.forEach(s => {
-    const width = Math.max(w, h) * s.width;
-    const coords = s.pts.map(i => lm[i]).filter(p => p).map(p => ({x: p.x * w, y: p.y * h}));
-    if (coords.length === 0) return;
-    const cx = coords.reduce((a, p) => a + p.x, 0) / coords.length;
-    const cy = coords.reduce((a, p) => a + p.y, 0) / coords.length;
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, width);
-    grad.addColorStop(0, 'rgba(255,140,150,0.5)');
-    grad.addColorStop(0.5, 'rgba(255,140,150,0.2)');
-    grad.addColorStop(1, 'rgba(255,140,150,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(cx, cy, width, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  ctx.globalCompositeOperation = 'source-over';
-
-  const numSize = Math.max(w, h) * 0.018;
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${numSize * 1.3}px -apple-system, sans-serif`;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  ctx.shadowColor = 'rgba(0,0,0,0.6)';
-  ctx.shadowBlur = 8;
-  ctx.fillText('✨ Makeup preview (estimated result)', 20, 20);
-  ctx.shadowBlur = 0;
-}
-
-function sampleSkin(ctx, lm, w, h){
-  const idxs=[50,280,10,151];
-  let r=0,g=0,b=0,n=0;
-  for(const i of idxs){
-    const p=lm[i]; if(!p)continue;
-    const d=ctx.getImageData(Math.round(p.x*w),Math.round(p.y*h),1,1).data;
-    r+=d[0];g+=d[1];b+=d[2];n++;
-  }
-  r=Math.round(r/n);g=Math.round(g/n);b=Math.round(b/n);
-  const hex='#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
-  const undertone = (r>b+12)?'Warm':(b>r+4)?'Cool':'Neutral';
-  return {hex,undertone,r,g,b};
-}
-
-function faceShape(lm){
-  const D=(a,b)=>Math.hypot(lm[a].x-lm[b].x, lm[a].y-lm[b].y);
-  const len=D(10,152), wid=D(234,454), jaw=D(172,397), fore=D(54,284);
-  const ratio=len/wid;
-  let shape;
-  if(ratio>1.5) shape='Long / oval-elongated';
-  else if(ratio<1.2) shape='Round / short';
-  else if(jaw>fore*1.05) shape='Square / wider jaw';
-  else if(fore>jaw*1.15) shape='Heart / wide forehead, narrow chin';
-  else shape='Oval (standard)';
-  return {shape, ratio:ratio.toFixed(2)};
-}
-
-function adviceFor(shape, undertone){
-  const a=[];
-  if(shape.includes('Long')) a.push('Long face: shadow the <b>hairline + chin horizontally</b> to compress length. Blush should sweep <b>horizontally</b>, not downward.');
-  else if(shape.includes('Round')) a.push('Round face: <b>diagonal contour below the cheekbone</b> to build dimension. Highlight the nose bridge + center forehead to elongate.');
-  else if(shape.includes('Square')) a.push('Wider jaw: soften the <b>jaw corners</b> with shadow. Blush on upper apple-of-cheek sweeping toward temple.');
-  else if(shape.includes('Heart')) a.push('Wide forehead, narrow chin: light contour on <b>forehead sides</b>. Subtle highlight on chin to balance.');
-  else a.push('Oval (standard): natural contour below cheekbone + highlight the highlight triangle. Works with anything.');
-  a.push('<b>Order</b>: contour first (purple 1→4) → eyeshadow → blush → highlight (blue 1→5) → lip last. Light tap and blend each layer.');
-  if(undertone.includes('Warm')) a.push('You\'re warm-toned: pick <b>champagne gold</b> highlight, <b>peach/coral</b> blush, <b>warm brown</b> contour.');
-  else if(undertone.includes('Cool')) a.push('You\'re cool-toned: pick <b>cool white/silver</b> highlight, <b>rose/berry pink</b> blush, <b>gray-brown</b> contour.');
-  else a.push('You\'re neutral-toned: most warm and cool shades work. Choose based on the day\'s outfit.');
-  return a;
-}
-
-function showResults(skin, fs){
-  $('results').classList.remove('hidden');
-  $('presets').classList.remove('hidden');
-  $('layers').classList.remove('hidden');
-  updateLegend();
-  $('swatch').style.background=skin.hex;
-  $('hex').textContent=skin.hex.toUpperCase();
-  $('undertone').textContent=skin.undertone;
-  $('faceshape').textContent=fs.shape;
-  $('ratio').textContent=fs.ratio;
-  $('advice').innerHTML=adviceFor(fs.shape,skin.undertone).map(t=>`<li>${t}</li>`).join('');
-}
-
-/* ✨ v1: 重繪 (when switching layers) */
-function redraw(){
-  if (!lastLandmarks || !lastImageSize) return;
-  const {w, h} = lastImageSize;
-  if (mode === 'upload') {
-    // upload mode: redraw original + overlay
-    const img = lastImageSize.img;
-    if (img) {
-      uctx.clearRect(0, 0, w, h);
-      uctx.drawImage(img, 0, 0, w, h);
-      drawOverlay(uctx, lastLandmarks, w, h);
-    }
-  } else if (mode === 'live' && frozen) {
-    // v3.10: live + frozen — redraw frozen frame + new overlay (preset/layer changed)
-    lctx.clearRect(0, 0, w, h);
-    lctx.drawImage(video, 0, 0, w, h);
-    drawOverlay(lctx, lastLandmarks, w, h);
-  }
-  // Live mode (unfrozen) auto-redraws via animation loop
-}
-
-/* v3: Preset chip switching */
-document.querySelectorAll('#presets button').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('#presets button').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    activePreset = btn.dataset.preset;
-    updateLegend();
-    if (stepMode) {
-      currentStep = 0;
-      updateStepUI();
-    }
-    redraw();
-  };
-});
-
-/* v3: Update legend to reflect active preset's colors */
-function updateLegend(){
-  const z = PRESETS[activePreset].zones;
-  const legend = document.querySelector('.legend');
-  if (!legend) return;
-  legend.innerHTML = `
-    <span><i class="dot" style="background:${z.highlight.color}"></i>Highlight</span>
-    <span><i class="dot" style="background:${z.contour.color}"></i>Contour</span>
-    <span><i class="dot" style="background:${z.blush.color}"></i>Blush</span>
-    <span><i class="dot" style="background:${z.brow?.color || '#7a5a40'}"></i>Brow</span>
-    <span><i class="dot" style="background:${z.eyeshadow.color}"></i>Eyeshadow</span>
-    <span><i class="dot" style="background:${z.lip.color}"></i>Lip</span>
-    <span style="color:var(--rose);font-weight:600;">→ ${PRESETS[activePreset].desc}</span>
-  `;
-}
-
-/* Layer toggle (which zone to see) */
-document.querySelectorAll('#layers button').forEach(btn => {
-  btn.onclick = () => {
-    document.querySelectorAll('#layers button').forEach(b => b.classList.remove('on'));
-    btn.classList.add('on');
-    activeZone = btn.dataset.zone;
-
-    if (activeZone === 'step') {
-      stepMode = true;
-      currentStep = 0;
-      $('stepbar').classList.add('show');
-      updateStepUI();
-    } else {
-      stepMode = false;
-      $('stepbar').classList.remove('show');
-    }
-
-    redraw();
-  };
-});
-
-function updateStepUI() {
-  const zKey = stepOrder[currentStep];
-  const d = stepDetails[zKey] || {
-    why: `${stepNames[zKey]} — ${PRESETS[activePreset].name} look`,
-    tool: 'See product instructions',
-    product: 'Use the preset recommended shade',
-    color: PRESETS[activePreset].zones[zKey]?.label || zKey,
-    apply: [`Paint ${stepNames[zKey]} along the highlighted markers on screen`],
-    technique: '⚠️ Small amount, multiple passes. Easier to add than subtract.',
-    blend: 'Light tap to blend, no hard edges',
-    timeMin: 2, timeMax: 5,
-  };
-  $('stepNum').textContent = currentStep + 1;
-  $('stepName').textContent = stepNames[zKey];
-  $('prevStep').disabled = currentStep === 0;
-  $('nextStep').disabled = currentStep === stepOrder.length - 1;
-
-  $('stepDetail').innerHTML = `
-    <div class="why">💡 ${d.why}</div>
-    <div class="row"><div class="label">Tool</div><div class="val">${d.tool}</div></div>
-    <div class="row"><div class="label">Product</div><div class="val">${d.product}</div></div>
-    <div class="row"><div class="label">Shade</div><div class="val">${d.color}</div></div>
-    <div class="row"><div class="label">Time</div><div class="val">${d.timeMin}-${d.timeMax} min</div></div>
-    <div style="margin-top:8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">How to apply</div>
-    <ul class="apply-list">
-      ${d.apply.map(s => `<li>${s}</li>`).join('')}
-    </ul>
-    <div class="tip">${d.technique}</div>
-    <div class="blend">🌫️ Blend: ${d.blend}</div>
-  `;
-}
-
-$('prevStep').onclick = () => {
-  if (currentStep > 0) {
-    currentStep--;
-    updateStepUI();
-    redraw();
-  }
-};
-$('nextStep').onclick = () => {
-  if (currentStep < stepOrder.length - 1) {
-    currentStep++;
-    updateStepUI();
-    redraw();
-  }
-};
-
-const uploadCanvas=$('uploadCanvas'), uctx=uploadCanvas.getContext('2d',{willReadFrequently:true});
-$('uploadBtn').onclick=()=>$('file').click();
-$('file').onchange=async e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const img=new Image();
-  img.onload=async()=>{
-    await initModel();
-    setStatus('Analyzing…', true);
-    const W=img.naturalWidth, H=img.naturalHeight;
-    uploadCanvas.width=W; uploadCanvas.height=H;
-    uctx.drawImage(img,0,0,W,H);
-    const res=await landmarker.detect(img);
-    if(!res.faceLandmarks?.length){ setStatus('No face detected — try a clearer, front-facing photo'); return; }
-    const lm=res.faceLandmarks[0];
-    lastLandmarks = lm;
-    lastImageSize = { w: W, h: H, img: img };
-    const skin=sampleSkin(uctx,lm,W,H);
-    drawOverlay(uctx,lm,W,H);
-    showResults(skin, faceShape(lm));
-    $('hint').classList.add('hidden');
-    uploadCanvas.classList.remove('hidden');
-    setStatus('Done ✓ — Tap a preset / layer button above to switch view');
-  };
-  img.src=URL.createObjectURL(f);
-};
-
-const video=$('video'), liveCanvas=$('liveCanvas'), lctx=liveCanvas.getContext('2d',{willReadFrequently:true});
-$('camBtn').onclick=async()=>{
-  await initModel();
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});
-  }catch(err){ setStatus('Cannot open camera: '+err.message+' (mobile needs HTTPS for camera permission)'); return; }
-  video.srcObject=stream; await video.play();
-  video.classList.remove('hidden'); liveCanvas.classList.remove('hidden'); $('hint').classList.add('hidden');
-  $('camBtn').classList.add('hidden'); $('snapBtn').classList.remove('hidden');
-  $('layers').classList.remove('hidden');
-  setStatus('Camera running · Tap a preset / layer button above to switch view');
+async function startTeach(){
+  $('vTarget').classList.add('hidden');$('vTeach').classList.remove('hidden');
+  cur=0;renderCard();
+  try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
+  catch(e){setStatus('開不了相機：'+e.message+'（手機要 HTTPS）');return;}
+  $('video').srcObject=stream;await $('video').play();
+  $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 跟著刷子的方向畫 ✨');
   loop();
-};
+}
+function stopCam(){if(rafId)cancelAnimationFrame(rafId);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+
 function loop(){
-  if(mode!=='live'||!stream)return;
-  const W=video.videoWidth, H=video.videoHeight;
-  if(W){
-    liveCanvas.width=W; liveCanvas.height=H;
-    lctx.clearRect(0,0,W,H);
-    const res=landmarker.detectForVideo(video, performance.now());
-    if(res.faceLandmarks?.length){
-      lastLandmarks = res.faceLandmarks[0];
-      lastImageSize = { w: W, h: H };
-      drawOverlay(lctx,res.faceLandmarks[0],W,H);
-    }
-  }
+  if(!stream)return;
+  const v=$('video'),c=$('cv'),x=c.getContext('2d');
+  const W=v.videoWidth,H=v.videoHeight;
+  if(W){c.width=W;c.height=H;x.clearRect(0,0,W,H);
+    const r=landmarker.detectForVideo(v,performance.now());
+    if(r.faceLandmarks&&r.faceLandmarks.length){lastLm=r.faceLandmarks[0];drawGuide(x,lastLm,W,H);}}
   rafId=requestAnimationFrame(loop);
 }
-// ✨ v3.10: Freeze actually pauses video + keeps markers on still frame
-// for user to paint along
-let frozen = false;
-$('snapBtn').onclick=()=>{
-  if (frozen) return;
-  const W=video.videoWidth,H=video.videoHeight;
-  // Pause video (markers stay still)
-  video.pause();
-  // Stop the rAF loop
-  if (rafId) cancelAnimationFrame(rafId);
-  frozen = true;
-  // Run face detection one more time on still frame + draw overlay
-  liveCanvas.width=W; liveCanvas.height=H;
-  lctx.clearRect(0,0,W,H);
-  const res=landmarker.detectForVideo(video,performance.now());
-  if(res.faceLandmarks?.length){
-    const lm=res.faceLandmarks[0];
-    lastLandmarks = lm;
-    lastImageSize = { w: W, h: H };
-    drawOverlay(lctx, lm, W, H);
-    const skin=sampleSkin(lctx,lm,W,H);
-    showResults(skin, faceShape(lm));
-  }
-  // Swap buttons
-  $('snapBtn').classList.add('hidden');
-  $('unfreezeBtn').classList.remove('hidden');
-  $('downloadBtn').classList.remove('hidden');
-  setStatus('🔒 Frame frozen — markers stay still. Paint along, switch presets / layers as you go.');
-};
 
-$('unfreezeBtn').onclick=()=>{
-  if (!frozen) return;
-  frozen = false;
-  video.play();
-  $('unfreezeBtn').classList.add('hidden');
-  $('downloadBtn').classList.add('hidden');
-  $('snapBtn').classList.remove('hidden');
-  setStatus('Resumed live · Camera running');
-  loop();
-};
-
-$('downloadBtn').onclick=()=>{
-  // Re-render frame + current overlay into clean canvas
-  const W = liveCanvas.width, H = liveCanvas.height;
-  const out = document.createElement('canvas');
-  out.width = W; out.height = H;
-  const octx = out.getContext('2d');
-  octx.drawImage(video, 0, 0, W, H);  // base frame
-  if (lastLandmarks) drawOverlay(octx, lastLandmarks, W, H); // current overlay
-  // Trigger download
-  out.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `suimira-${PRESETS[activePreset].name.replace(/[^a-z0-9]/gi,'-')}-${Date.now()}.png`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, 'image/png');
-  setStatus('📥 Snapshot downloaded — print or open on another screen to paint along');
-};
-
-function stopCam(){ if(rafId)cancelAnimationFrame(rafId); if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;} }
-$('mUpload').onclick=()=>switchMode('upload');
-$('mLive').onclick=()=>switchMode('live');
-async function switchMode(m){
-  if(m===mode)return; mode=m; landmarker=null;
-  $('mUpload').classList.toggle('on',m==='upload');
-  $('mLive').classList.toggle('on',m==='live');
-  $('uploadBtn').classList.toggle('hidden',m!=='upload');
-  $('camBtn').classList.toggle('hidden',m!=='live');
-  $('snapBtn').classList.add('hidden');
-  $('unfreezeBtn').classList.add('hidden');
-  $('downloadBtn').classList.add('hidden');
-  frozen = false;
-  ['video','liveCanvas','uploadCanvas'].forEach(id=>$(id).classList.add('hidden'));
-  $('layers').classList.add('hidden');
-  $('stepbar').classList.remove('show');
-  $('hint').classList.remove('hidden');
-  $('hint').innerHTML = m==='live'
-    ? 'Tap <b>Open camera</b> → use front camera on yourself<br>See where to apply makeup in real-time (mobile needs HTTPS)'
-    : 'Tap <b>Pick a face photo</b><br>Front-facing, even lighting works best';
-  $('results').classList.add('hidden');
-  stopCam(); setStatus('');
+/* ---- 教學引導渲染：方向掃(重→淺) + 會動的刷子 ---- */
+function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,y:p.y*h}));}
+function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
+function sweep(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
+  const base=Math.max(R*0.011,Math.min(R*0.04,len*0.22));
+  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.40,rad=base*(1-t*0.45);
+    const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
+    g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
+    x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
 }
-setStatus('Ready · Pick a face photo to start');
+function brush(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
+  const ph=(performance.now()%1700)/1700,p=along(P,ph),p2=along(P,Math.min(0.999,ph+0.05));
+  const ang=Math.atan2(p2.y-p.y,p2.x-p.x);
+  x.save();
+  x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
+  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
+  x.fillStyle='rgba(255,255,255,.4)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.011,0,7);x.fill(); // 起點=重(小)
+  const r=Math.max(R*0.008,Math.min(R*0.015,len*0.09)); // 中空小環、不蓋臉
+  x.lineWidth=R*0.004;x.strokeStyle='rgba(255,255,255,.97)';x.fillStyle=color+'55';
+  x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.stroke();
+  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.97)'; // 小箭頭
+  x.beginPath();x.moveTo(r*1.8,0);x.lineTo(r*0.9,-r*0.7);x.lineTo(r*0.9,r*0.7);x.closePath();x.fill();
+  x.restore();
+}
+const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+function drawBrowHairs(x,lm,idx,color,w,h){
+  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
+  x.save();
+  x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=R*0.0035;x.setLineDash([R*0.01,R*0.01]);
+  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
+  const N=12,hl=R*0.022;
+  for(let i=0;i<=N;i++){const p=along(P,i/N);
+    x.strokeStyle=color+'cc';x.lineWidth=R*0.0035;
+    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-hl*0.5,p.y-hl);x.stroke();} // 一根根往上斜=毛流
+  const ph=(performance.now()%1600)/1600,c=along(P,ph),r=R*0.011;
+  x.fillStyle=color+'55';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
+  x.beginPath();x.arc(c.x,c.y,r,0,7);x.fill();x.stroke();
+  x.restore();
+}
+function drawGuide(x,lm,w,h){
+  const s=STEPS[cur];
+  if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
+    const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+    let P=pts(lm,O,w,h);if(P.length<6)return;
+    const cx=P.reduce((a,p)=>a+p.x,0)/P.length, cy=P.reduce((a,p)=>a+p.y,0)/P.length;
+    const SC=1.13, UP=Math.max(w,h)*0.05;
+    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 額頭(上半)再往上推到髮際
+    x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
+    x.globalCompositeOperation='soft-light';x.globalAlpha=.55;x.fillStyle='#fff1e4';x.fill();x.restore();return;
+  }
+  if(s.mode==='lip'){ // 嘟嘟唇：中央深→邊緣淡 + 唇珠小C + 下唇唇蜜
+    const P=pts(lm,LIP,w,h);if(P.length<8||!lm[13]||!lm[14])return;const R=Math.max(w,h);
+    x.save();
+    x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.clip();
+    x.globalCompositeOperation='multiply';
+    x.globalAlpha=.26;x.fillStyle=s.color;x.fillRect(0,0,w,h); // 全唇淡底
+    const cx=lm[13].x*w,cy=((lm[13].y+lm[14].y)/2)*h; // 中央最深
+    const g=x.createRadialGradient(cx,cy,0,cx,cy,R*0.06);
+    g.addColorStop(0,s.color+'cc');g.addColorStop(.55,s.color+'55');g.addColorStop(1,s.color+'00');
+    x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,w,h);
+    x.restore();
+    const ph=(performance.now()%1500)/1500,a=.4+.3*Math.sin(ph*6.28);
+    x.save();x.globalCompositeOperation='screen';x.fillStyle='rgba(255,246,238,'+a+')';
+    if(lm[0]){x.beginPath();x.arc(lm[0].x*w,lm[0].y*h,R*0.013,0,7);x.fill();} // 唇珠小C提亮
+    x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.018,0,7);x.fill(); // 下唇中央唇蜜
+    x.restore();
+    return;}
+  if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
+  // sweep mode — 多區各自 sweep + brush
+  x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
+}
+
+/* ---- step nav ---- */
+function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / ${STEPS.length}`;
+  $('sName').textContent=s.ic+' '+s.name;$('sWhere').innerHTML=s.where;$('sSku').textContent=s.sku;
+  $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';}
+function step(d){cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
+renderCard();
 </script>
-<!-- ✨ v3.29: GoatCounter analytics (count demo visitors) -->
-<script data-goatcounter="https://suimira.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://suimira.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

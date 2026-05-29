@@ -125,9 +125,9 @@ const STEPS=[
    paths:[[117,118,119,47,100],[346,347,348,277,329]],color:'#ff8fa0'},
  {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
    paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
- {key:'eyeshadow',ic:'🤎',name:'眼影（貼膚暖棕）',where:'眼皮暖棕、<b>往外、往下暈</b>一點接到腮紅、同色系',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
-   paths:[[27,28,29,30],[257,258,259,260]],color:'#c9a98a'},
- {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順著<b>毛流一根一根</b>補、缺的地方補就好——自然平眉、不要框死',sku:'灰棕眉筆/眉粉',mode:'sweep',
+ {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
+   paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
+ {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'sweep',
    paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
  {key:'lip',ic:'💋',name:'唇（玫瑰水光）',where:'<b>塗滿全唇</b>、中央點一點唇蜜 → 果凍水光唇',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
 ];
@@ -175,7 +175,7 @@ function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,
 function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
 function sweep(x,lm,idx,color,w,h){
   const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*0.4,rad=R*0.04*(1-t*0.4);
+  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.55,rad=R*0.045*(1-t*0.45);
     const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
     g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
     x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}

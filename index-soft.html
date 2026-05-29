@@ -574,9 +574,9 @@ const PRESETS = {
         { pts: POS.appleR_big, width: 0.080, fill: 'oval' },
         { shape:'cream', pts: POS.noseBridge, width: 0.026, color:'#ff9aa8' },
       ]},
-      eyeshadow: { color: '#bfa078', label: 'Eyeshadow (暖粉)', strokes: [
-        { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#bfa078' },
-        { shape:'oval', pts: POS.upperLidR, width: 0.040, color:'#bfa078' },
+      eyeshadow: { color: '#c9a98a', label: 'Eyeshadow (暖粉)', strokes: [
+        { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#c9a98a' },
+        { shape:'oval', pts: POS.upperLidR, width: 0.040, color:'#c9a98a' },
       ]},
       lip: { color: '#e0808f', label: 'Lip (玫瑰水光)', strokes: [
         { pts: POS.lipsOuter, width: 0.020, fill: 'oval' },
@@ -1017,6 +1017,21 @@ function drawPresetPreview(ctx, lm, w, h){
   // (skip in live mode for perf; do it in upload mode)
   if (mode === 'upload') applySkinSmoothing(ctx, faceMask, w, h, 4);
 
+  // ── 2.5 v3.40: FOUNDATION base — 先把皮膚提亮+勻一下 (皮膚先好起來，再上妝) ──
+  ctx.save();
+  ctx.globalCompositeOperation = 'soft-light';
+  ctx.globalAlpha = 0.30 * intensity;
+  ctx.fillStyle = '#fff1e4';
+  ctx.drawImage(maskedFill(faceMask, ctx.fillStyle, w, h), 0, 0);
+  ctx.restore();
+  // 再一層極淡提亮 (screen) 做「打亮/美白感」
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = 0.12 * intensity;
+  ctx.fillStyle = '#fff6ee';
+  ctx.drawImage(maskedFill(faceMask, ctx.fillStyle, w, h), 0, 0);
+  ctx.restore();
+
   // ── 3. Warm tint overlay (face only) ──
   ctx.save();
   ctx.globalAlpha = presetWarmthAlpha;
@@ -1043,7 +1058,7 @@ function drawPresetPreview(ctx, lm, w, h){
 
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.45 * intensity;
+  ctx.globalAlpha = 0.32 * intensity;
   for (const stroke of z.eyeshadow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.eyeshadow.color, w, h, 'soft');
   ctx.restore();
 

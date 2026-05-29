@@ -135,10 +135,10 @@
 
   <!-- ✨ v3.4: PRESET selector moved ABOVE stage — first thing user sees -->
   <div id="presets" class="layers hidden" style="margin-bottom:10px;">
-    <button data-preset="sweet" class="on">🍑 Korean Warm Pink Sparkle</button>
+    <button data-preset="sweet">🍑 Korean Warm Pink Sparkle</button>
     <button data-preset="bold">🍓 Coral Tinted Lip</button>
     <button data-preset="kpop">❄️ K-pop Clean Girl</button>
-    <button data-preset="bare">💧 Bare-Face Glow</button>
+    <button data-preset="bare" class="on">💧 Bare-Face Glow</button>
   </div>
 
   <div class="stage">
@@ -159,6 +159,14 @@
     <button data-zone="brow">Brow</button>
     <button data-zone="eyeshadow">Eyeshadow</button>
     <button data-zone="lip">Lip</button>
+  </div>
+
+  <!-- ✨ v3.32: makeup intensity (淡 → 濃) -->
+  <div id="intensityWrap" style="margin:10px 0;padding:10px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);">
+    <span>淡妝</span>
+    <input type="range" id="intensity" min="0" max="100" value="55" style="flex:1;">
+    <span>濃妝</span>
+    <b id="intensityVal" style="color:var(--ink);min-width:40px;text-align:right;">55%</b>
   </div>
 
   <!-- ✨ v1.2: Step-by-step expanded panel -->
@@ -245,6 +253,7 @@ const setStatus = (t, busy=false) => statusEl.innerHTML = busy ? `<span class="s
 
 let landmarker = null, mode = 'upload', stream = null, rafId = null;
 let activeZone = 'none';
+let intensity = 0.55;  // v3.32: 淡→濃 slider (0..1)
 let stepMode = false;
 let currentStep = 0;
 // ✨ v3.15: 6-zone order with brow (traditional makeup application order)
@@ -662,7 +671,7 @@ const PRESETS = {
 };
 
 // 當前 active preset (mutable)
-let activePreset = 'sweet';
+let activePreset = 'bare';
 // Compat: 舊 code 讀 ZONES、轉 proxy 到 active preset 的 zones
 const ZONES = new Proxy({}, {
   get(_, key) { return PRESETS[activePreset].zones[key]; }
@@ -879,7 +888,7 @@ function drawCreamBlob(ctx, lm, indices, color, widthRatio, w, h){
 function drawPresetPreview(ctx, lm, w, h){
   const z = PRESETS[activePreset].zones;
   const presetWarmth = PRESET_WARMTH[activePreset] || [240, 200, 200];
-  const presetWarmthAlpha = 0.12;
+  const presetWarmthAlpha = 0.12 * intensity;
 
   // ── 1. Build face oval mask (face only — no background bleed) ──
   const faceMask = buildFaceOvalMask(lm, w, h);
@@ -899,7 +908,7 @@ function drawPresetPreview(ctx, lm, w, h){
   // ── 4. Zone overlays (heavier alpha + wider than markers, but face-masked) ──
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.42;
+  ctx.globalAlpha = 0.42 * intensity;
   for (const stroke of z.contour.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.contour.color, w, h, 'soft');
   ctx.restore();
 
@@ -907,32 +916,32 @@ function drawPresetPreview(ctx, lm, w, h){
   if (z.brow) {
     ctx.save();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = 0.55;
+    ctx.globalAlpha = 0.55 * intensity;
     for (const stroke of z.brow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.brow.color, w, h, 'soft');
     ctx.restore();
   }
 
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.45 * intensity;
   for (const stroke of z.eyeshadow.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.eyeshadow.color, w, h, 'soft');
   ctx.restore();
 
   ctx.save();
   ctx.globalCompositeOperation = 'overlay';
-  ctx.globalAlpha = 0.50;
+  ctx.globalAlpha = 0.50 * intensity;
   for (const stroke of z.blush.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.blush.color, w, h, 'feathered');
   ctx.restore();
 
   ctx.save();
   ctx.globalCompositeOperation = 'screen';
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.45 * intensity;
   for (const stroke of z.highlight.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.highlight.color, w, h, 'soft');
   ctx.restore();
 
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
-  ctx.globalAlpha = 0.62;
+  ctx.globalAlpha = 0.62 * intensity;
   for (const stroke of z.lip.strokes || []) drawPreviewStroke(ctx, lm, stroke, z.lip.color, w, h, 'feathered');
   ctx.restore();
 }
@@ -1473,6 +1482,12 @@ async function switchMode(m){
   stopCam(); setStatus('');
 }
 setStatus('Ready · Pick a face photo to start');
+</script>
+<script>
+(function(){
+  var s=document.getElementById('intensity'), v=document.getElementById('intensityVal');
+  if(s){ s.addEventListener('input',function(){ intensity=s.value/100; if(v)v.textContent=s.value+'%'; if(typeof redraw==='function') redraw(); }); }
+})();
 </script>
 </body>
 </html>

@@ -135,10 +135,11 @@
 
   <!-- ✨ v3.4: PRESET selector moved ABOVE stage — first thing user sees -->
   <div id="presets" class="layers hidden" style="margin-bottom:10px;">
+    <button data-preset="linxiang" class="on">🌸 林襄 戀愛感</button>
     <button data-preset="sweet">🍑 Korean Warm Pink Sparkle</button>
     <button data-preset="bold">🍓 Coral Tinted Lip</button>
     <button data-preset="kpop">❄️ K-pop Clean Girl</button>
-    <button data-preset="bare" class="on">💧 Bare-Face Glow</button>
+    <button data-preset="bare">💧 Bare-Face Glow</button>
   </div>
 
   <div class="stage">
@@ -252,7 +253,7 @@ const statusEl = $('status');
 const setStatus = (t, busy=false) => statusEl.innerHTML = busy ? `<span class="spin"></span>${t}` : t;
 
 let landmarker = null, mode = 'upload', stream = null, rafId = null;
-let activeZone = 'none';
+let activeZone = 'preview';
 let intensity = 0.55;  // v3.32: 淡→濃 slider (0..1)
 let stepMode = false;
 let currentStep = 0;
@@ -551,6 +552,41 @@ const PRESETS = {
       ]},
     },
   },
+  linxiang: {
+    name: '🌸 林襄 戀愛感',
+    desc: 'Highlight-driven + high blush across nose, minimal contour, dewy warm-pink (林襄/戀愛感)',
+    zones: {
+      highlight: { color: '#9fe0ec', label: 'Highlight (主角)', strokes: [
+        { shape:'aegyo', pts: POS.aegyoL, color:'#fff0e0' },
+        { shape:'aegyo', pts: POS.aegyoR, color:'#fff0e0' },
+        { pts: POS.noseBridge, width: 0.013 },
+        { pts: POS.philtrum, width: 0.010 },
+        { shape:'cream', pts: POS.foreheadCenter, width: 0.036 },
+        { shape:'cream', pts: POS.cheekHighL, width: 0.028 },
+        { shape:'cream', pts: POS.cheekHighR, width: 0.028 },
+      ]},
+      contour: { color: '#c98fe8', label: 'Contour (極淡)', strokes: [
+        { shape:'cream', pts: POS.cheekboneSweepL, width: 0.028 },
+        { shape:'cream', pts: POS.cheekboneSweepR, width: 0.028 },
+      ]},
+      blush: { color: '#ff8fa0', label: 'Blush (高位 + 橫過鼻樑)', strokes: [
+        { pts: POS.appleL_small, width: 0.085, fill: 'oval' },
+        { pts: POS.appleR_small, width: 0.085, fill: 'oval' },
+        { shape:'cream', pts: POS.noseBridge, width: 0.028, color:'#ff9aa8' },
+      ]},
+      eyeshadow: { color: '#e8a8b8', label: 'Eyeshadow (暖粉)', strokes: [
+        { shape:'oval', pts: POS.upperLidL, width: 0.040, color:'#e8a8b8' },
+        { shape:'oval', pts: POS.upperLidR, width: 0.040, color:'#e8a8b8' },
+      ]},
+      lip: { color: '#e0808f', label: 'Lip (玫瑰水光)', strokes: [
+        { pts: POS.lipsOuter, width: 0.020, fill: 'oval' },
+      ]},
+      brow: { color: '#6a4a34', label: 'Brow (淡)', strokes: [
+        { shape:'polygon', pts: POS.browL_poly },
+        { shape:'polygon', pts: POS.browR_poly },
+      ]},
+    },
+  },
   bold: {
     name: '🍓 Coral Tinted Lip',
     desc: 'Coral-red tinted lip + brown smoky lid + subtle aegyo-sal + pro-grade highlight + bare-skin look',
@@ -671,7 +707,7 @@ const PRESETS = {
 };
 
 // 當前 active preset (mutable)
-let activePreset = 'bare';
+let activePreset = 'linxiang';
 // Compat: 舊 code 讀 ZONES、轉 proxy 到 active preset 的 zones
 const ZONES = new Proxy({}, {
   get(_, key) { return PRESETS[activePreset].zones[key]; }

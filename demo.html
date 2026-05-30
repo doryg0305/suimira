@@ -149,8 +149,8 @@ if(isInApp())$('iab').classList.remove('hidden');
 const STEPS=[
  {key:'primer',ic:'✨',name:'1 · 妝前乳 Primer',where:'刮刀<b>抹</b>開薄薄一層 → <b>濕海綿拍勻</b>（看「怎麼做」動畫）',sku:'平滑 / 控油妝前乳'},
  {key:'base',ic:'🩷',name:'2 · 底妝 Foundation',where:'臉中央抹開 → 往外推 → <b>濕海綿拍勻</b>（看「怎麼做」動畫）',sku:'Dior 超完美柔光粉底'},
- {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'從<b>耳朵斜掃向嘴角方向</b>、停在中臉 + 髮際框 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',
-   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
+ {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>輪廓凹陷</b>(顴骨下、髮際、下顎線)<b>不是面中</b>；從<b>外側(重)往內掃淡</b>、暈開',sku:'咖啡棕修容',
+   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256',mode:'contour'},
  {key:'highlight',ic:'✨',name:'打亮',where:'山根→鼻樑→鼻頭、額中、眼頭、眼下三角、唇珠、嘴角、下巴 — 點上再<b>拍開</b>',sku:'OFRA Cloud9',
    paths:[[168,6,197,195,4,1],[10,151,9],[133,243],[362,463],[118,117,101],[347,346,330],[37,0,267],[61,185],[291,409],[199,175,200]],color:'#f7e7c8',bs:0.6},
  {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'蘋果肌<b>一圈一圈打</b>、暈開，位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop',
@@ -285,12 +285,27 @@ function lipHint(x,lm,prog,w,h,color){
   x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.013,0,7);x.fill();         // 下唇唇蜜
   x.restore();
 }
+/* 修容：輪廓凹陷、重→淺（外側重 → 往內掃淡，面中不暗）*/
+function contourHint(x,lm,idx,prog,w,h,color){
+  const P=idx.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
+  const R=Math.max(w,h);
+  x.save();x.globalCompositeOperation='multiply';
+  for(let t=0;t<=1.001;t+=0.05){const p=alongP(P,t);const a=(1-t)*(1-t)*0.5;const rad=R*0.045;
+    const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
+    g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
+    x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
+  x.restore();
+  x.save();x.globalAlpha=.5;x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=R*0.005;x.setLineDash([R*0.012,R*0.01]);
+  x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();x.setLineDash([]);x.restore();
+  const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,1); // 從重(起點)往淺掃
+}
 function drawHint(x,lm,w,h){
   const s=STEPS[cur];if(!s.paths)return;
   const PERIOD=8000,ON=2300,t=performance.now()%PERIOD;
   if(t>ON)return;                 // 其餘 ~5.7 秒：乾淨鏡子、看自己
   const prog=t/ON, color=s.color||'#ffffff';
-  if(s.mode==='blush'){ s.paths.forEach(p=>blushHint(x,lm,p,prog,w,h,color)); }
+  if(s.mode==='contour'){ s.paths.forEach(p=>contourHint(x,lm,p,prog,w,h,color)); }
+  else if(s.mode==='blush'){ s.paths.forEach(p=>blushHint(x,lm,p,prog,w,h,color)); }
   else if(s.mode==='brow'){ s.paths.forEach(p=>browHint(x,lm,p,prog,w,h,color)); }
   else if(s.mode==='lip'){ lipHint(x,lm,prog,w,h,color); }
   else { s.paths.forEach(p=>brushSweep(x,lm,p,prog,w,h,color,s.bs||1)); }

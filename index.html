@@ -1,317 +1,457 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Suimira · 你想變成這個 look</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Suimira — AI Beauty Mirror</title>
+<meta name="description" content="A warm intelligent mirror that understands your features, enhances your glow, and guides your beauty routine with gentle personalized AI.">
+<meta property="og:title" content="Suimira — See your beauty, become your best.">
+<meta property="og:description" content="A warm intelligent mirror that understands your features and guides your beauty routine.">
+<meta property="og:image" content="hero-muse.jpg">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#fcf8f4">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <style>
-  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
-    --line:#ecdfd4;--card:#fff;--chip:#f6ece4;}
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
-  .app{max-width:440px;margin:0 auto;min-height:100vh;}
-  .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
-  .h{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:500;text-align:center;margin:2px 16px 2px;}
-  .sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
-  .hidden{display:none!important;}
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
 
-  /* WALL */
-  .wall{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 16px 30px;}
-  .look{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
-    cursor:pointer;box-shadow:0 3px 12px rgba(150,90,90,.08);transition:transform .15s;}
-  .look:active{transform:scale(.97);}
-  .look img{width:100%;height:160px;object-fit:cover;display:block;background:#eadfd5;}
-  .look .nm{padding:8px 10px;font-size:13px;font-weight:600;}
-  .look .nm small{display:block;color:var(--muted);font-weight:400;font-size:11px;}
-  .look.soon{opacity:.55;}
-  .look.soon .ph{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:#f1e7dd;}
+  :root{
+    --bg:            #fcf8f4;
+    --bg-grad-1:     #fffaf7;
+    --bg-grad-2:     #fdf5ef;
+    --bg-grad-3:     #f7ece4;
+    --glow-1:        #f4d7c7;
+    --glow-2:        #f3d8ce;
+    --ink:           #7c5446;
+    --ink-mid:       #8b5e4d;
+    --ink-soft:      #9b7768;
+    --ink-faded:     #b58d7f;
+    --card-bg:       rgba(255,255,255,0.6);
+    --card-border:   #f0dfd6;
+    --card-shadow:   rgba(234,217,207,0.4);
+    --primary:       #b36d55;
+    --primary-soft:  #b97860;
+    --primary-edge:  #d7a18d;
+    --line-soft:     #d7b7a7;
+    --feature-circle:#f3dfd5;
+    --shadow-warm:   rgba(216,179,163,0.4);
+  }
 
-  /* TARGET */
-  .hero{margin:0 16px;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(150,90,90,.18);}
-  .hero img{width:100%;display:block;}
-  .tcta{padding:14px 16px 26px;}
-  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
-    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
-  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;font-weight:600;font-size:13px;padding:8px;}
+  html, body{
+    background:var(--bg); color:var(--ink-mid);
+    font-family:'Inter', -apple-system, "PingFang TC", "Noto Sans TC", sans-serif;
+    font-weight:300; line-height:1.6;
+    min-height:100vh; overflow-x:hidden; position:relative;
+  }
 
-  /* TEACH */
-  .stage{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
-  .stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .stage video{transform:scaleX(-1);} .stage canvas{transform:scaleX(-1);}
-  .stagehint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    text-align:center;color:#fff;font-size:13px;padding:0 30px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;}
-  .card .stepnum{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em;}
-  .card .stepname{font-size:17px;font-weight:700;margin:2px 0 6px;}
-  .card .where{font-size:13.5px;margin:3px 0;}
-  .card .where b{color:var(--rose);}
-  .card .sku{display:inline-block;margin-top:7px;font-size:11px;background:var(--chip);border:1px solid var(--line);
-    border-radius:20px;padding:3px 10px;color:#7a5a3a;font-weight:600;}
-  .nav{display:flex;gap:10px;padding:0 16px 24px;}
-  .nav button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:13px;padding:13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
-  .nav button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));}
-  .nav button:disabled{opacity:.4;}
-  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 16px 6px;}
-  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;margin-right:6px;vertical-align:-1px;}
-  @keyframes s{to{transform:rotate(360deg)}}
+  .serif{
+    font-family:'Libre Baskerville', Baskerville, 'Times New Roman', serif;
+    font-weight:400;
+  }
+
+  /* ── Ambient background + glow blobs ── */
+  .ambient{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:linear-gradient(to bottom, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3));
+  }
+  .glow-blob{
+    position:fixed; border-radius:50%; filter:blur(80px); pointer-events:none; z-index:0;
+  }
+  .glow-1{ width:320px; height:320px; top:0; left:-120px; background:var(--glow-1); opacity:.4; }
+  .glow-2{ width:280px; height:280px; top:180px; right:-80px; background:var(--glow-2); opacity:.3; }
+
+  main{ position:relative; z-index:10; }
+
+  /* ── NAV ── */
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:32px 64px;
+  }
+  nav .logo{
+    font-size:60px; letter-spacing:-1.5px; font-weight:400; color:var(--ink);
+    line-height:1; position:relative;
+  }
+  nav .logo-sub{
+    display:block; font-family:'Inter', sans-serif;
+    font-size:11px; letter-spacing:0.55em; font-weight:600;
+    color:var(--ink-faded); text-transform:uppercase;
+    margin-top:6px; margin-left:2px;
+  }
+  /* v3.21: glowing i-dots in wordmark */
+  .i-glow{ position:relative; display:inline-block; }
+  .i-glow .i-dot{
+    position:absolute;
+    top:0.05em; left:50%; transform:translateX(-50%);
+    width:0.16em; height:0.16em;
+    border-radius:50%;
+    background:var(--primary);
+    box-shadow:
+      0 0 0.15em rgba(217,144,128,0.9),
+      0 0 0.30em rgba(217,144,128,0.7),
+      0 0 0.60em rgba(230,169,138,0.5);
+    animation: i-glow-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes i-glow-pulse{
+    0%, 100% { opacity: 0.9; transform: translateX(-50%) scale(1); }
+    50%      { opacity: 1;   transform: translateX(-50%) scale(1.15); }
+  }
+  nav .nav-links{
+    display:flex; gap:40px; font-size:13px; letter-spacing:.06em; color:var(--ink-soft);
+  }
+  nav .nav-links a{ color:inherit; text-decoration:none; transition:opacity .2s; }
+  nav .nav-links a:hover{ opacity:.7; }
+  /* v3.28: language toggle button */
+  .lang-toggle{
+    background:transparent; border:1px solid var(--line-soft);
+    color:var(--ink-mid); font-family:'Cormorant Garamond', serif;
+    width:36px; height:36px; border-radius:50%;
+    cursor:pointer; font-size:14px; font-weight:500;
+    transition:all .2s; padding:0;
+  }
+  .lang-toggle:hover{ background:var(--bg-soft); }
+
+  /* ── HERO ── */
+  .hero{
+    padding:48px 64px 96px;
+  }
+  .hero-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center;
+  }
+  .hero-copy{ max-width:560px; }
+  .eyebrow{
+    text-transform:uppercase; letter-spacing:.35em; font-size:11px;
+    color:var(--ink-faded); margin-bottom:24px; font-weight:500;
+  }
+  .hero h2{
+    font-size:72px; line-height:1.05; color:var(--ink); margin-bottom:0;
+  }
+  .hero p.sub{
+    margin-top:32px; font-size:18px; line-height:1.6; color:var(--ink-soft);
+    max-width:500px;
+  }
+  .hero-actions{
+    margin-top:40px; display:flex; flex-wrap:wrap; gap:16px;
+  }
+  .btn{
+    display:inline-block; padding:16px 32px; border-radius:999px;
+    font-size:13px; letter-spacing:.06em; cursor:pointer; transition:all .2s;
+    text-decoration:none; font-weight:500; font-family:inherit;
+    border:none;
+  }
+  .btn-primary{
+    background:var(--primary); color:#fff;
+    box-shadow:0 20px 40px var(--shadow-warm);
+  }
+  .btn-primary:hover{ opacity:.9; }
+  .btn-ghost{
+    background:rgba(255,255,255,.6); color:var(--ink-mid);
+    border:1px solid var(--line-soft); backdrop-filter:blur(8px);
+  }
+  .btn-ghost:hover{ background:#fff; }
+
+  /* ── Hero visual ── */
+  .hero-visual{
+    position:relative; display:flex; justify-content:center;
+  }
+  .hero-visual .blob{
+    position:absolute; width:420px; height:420px; background:#f3d5c7;
+    border-radius:50%; filter:blur(80px); opacity:.4;
+  }
+  .hero-card-outer{
+    position:relative; background:rgba(255,255,255,0.5); backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.6); border-radius:42px; padding:20px;
+    box-shadow:0 30px 60px rgba(228,207,196,.5);
+  }
+  .hero-card-inner{
+    width:420px; max-width:100%; border-radius:36px; background:#f8eee8;
+    padding:16px; border:1px solid #efdcd2;
+  }
+  .hero-card-image{
+    aspect-ratio:4/5; border-radius:28px; overflow:hidden; position:relative;
+    background:linear-gradient(to bottom, #fffaf7, #f4e5db);
+  }
+  .hero-card-image img{
+    width:100%; height:100%; object-fit:cover; opacity:.95; display:block;
+  }
+  .hero-card-image::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(248,238,232,.4), transparent);
+    pointer-events:none;
+  }
+
+  /* ── FEATURE CARDS ── */
+  .features{ padding:0 64px 96px; }
+  .features-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:24px;
+  }
+  .feature-card{
+    background:rgba(255,255,255,.6); backdrop-filter:blur(20px);
+    border:1px solid var(--card-border); border-radius:32px; padding:32px;
+    box-shadow:0 20px 40px var(--card-shadow);
+  }
+  .feature-circle{
+    width:48px; height:48px; border-radius:50%;
+    background:var(--feature-circle); margin-bottom:24px;
+  }
+  .feature-card h3{
+    font-size:24px; color:var(--ink); margin-bottom:16px; font-weight:400;
+  }
+  .feature-card p{ color:var(--ink-soft); font-size:15px; line-height:1.7; }
+
+  /* ── EXPERIENCE ── */
+  .experience{ padding:0 64px 112px; }
+  .experience-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center;
+  }
+  .exp-card{
+    background:rgba(255,255,255,.6); border:1px solid var(--card-border);
+    border-radius:40px; padding:24px;
+    box-shadow:0 30px 60px var(--card-shadow);
+  }
+  .exp-card img{
+    width:100%; display:block; border-radius:28px; object-fit:cover;
+  }
+  /* v3.15: CSS-rendered wordmark card (replaced design mockup screenshot) */
+  .exp-wordmark-card{
+    aspect-ratio:1/1.1;
+    background:linear-gradient(140deg, #fffaf7, #f8eee8 60%, #f4d9c5);
+    border-radius:28px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:40px; position:relative; overflow:hidden;
+  }
+  .exp-wordmark-card::before{
+    content:""; position:absolute; top:-80px; right:-80px;
+    width:240px; height:240px; border-radius:50%;
+    background:#f4d7c7; filter:blur(60px); opacity:.55;
+  }
+  .exp-wordmark-card::after{
+    content:""; position:absolute; bottom:-60px; left:-60px;
+    width:200px; height:200px; border-radius:50%;
+    background:#f3d8ce; filter:blur(60px); opacity:.45;
+  }
+  .exp-wordmark{
+    font-size:96px; line-height:1; letter-spacing:-2.5px;
+    color:var(--ink); font-weight:400; z-index:1; position:relative;
+  }
+  .exp-wordmark .dot{color:var(--primary);}
+  .exp-wordmark-sub{
+    margin-top:14px; font-family:'Inter', sans-serif;
+    font-size:13px; letter-spacing:0.65em; font-weight:700;
+    color:var(--ink-faded); text-transform:uppercase;
+    z-index:1; position:relative;
+  }
+  .exp-wordmark-tag{
+    margin-top:14px; font-size:13px; letter-spacing:.2em;
+    text-transform:uppercase; color:var(--ink-soft); z-index:1; position:relative;
+  }
+  @media (max-width:900px){ .exp-wordmark{font-size:64px;} }
+  .experience h2{
+    font-size:60px; line-height:1.15; color:var(--ink); font-weight:400;
+    margin-bottom:0;
+  }
+  .experience p.sub{
+    margin-top:32px; color:var(--ink-soft); line-height:1.7; font-size:18px;
+    max-width:560px;
+  }
+
+  /* ── CTA ── */
+  .cta{ padding:0 64px 80px; }
+  .cta-card{
+    border-radius:42px;
+    background:linear-gradient(to right, var(--primary-soft), var(--primary-edge));
+    padding:1px;
+    box-shadow:0 30px 60px var(--shadow-warm);
+  }
+  .cta-inner{
+    border-radius:42px; background:var(--bg); padding:64px 64px;
+    text-align:center;
+  }
+  .cta-inner h2{
+    font-size:48px; color:var(--ink); font-weight:400; line-height:1.2;
+  }
+  .cta-inner p{
+    margin-top:24px; color:var(--ink-soft); font-size:18px; line-height:1.7;
+    max-width:640px; margin-left:auto; margin-right:auto;
+  }
+  .cta-inner .btn-primary{ margin-top:40px; padding:18px 40px; }
+
+  /* ── FOOTER ── */
+  footer{
+    padding:30px 64px 60px;
+    text-align:center; font-size:12px; color:var(--ink-faded);
+    border-top:1px solid var(--card-border); margin-top:20px;
+  }
+  footer a{ color:var(--ink-soft); text-decoration:none; margin:0 8px; }
+  footer a:hover{ color:var(--ink); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px){
+    nav{ padding:20px 24px; }
+    nav .logo{ font-size:44px; }
+    nav .nav-links{ display:none; }
+    .hero{ padding:24px 24px 64px; }
+    .hero-grid{ grid-template-columns:1fr; gap:48px; }
+    .hero h2{ font-size:42px; }
+    .hero p.sub{ font-size:16px; }
+    .features{ padding:0 24px 64px; }
+    .features-grid{ grid-template-columns:1fr; }
+    .experience{ padding:0 24px 80px; }
+    .experience-grid{ grid-template-columns:1fr; gap:32px; }
+    .experience h2{ font-size:40px; }
+    .cta{ padding:0 24px 60px; }
+    .cta-inner{ padding:48px 24px; }
+    .cta-inner h2{ font-size:32px; }
+    footer{ padding:24px; }
+    .hero-card-inner{ width:100%; }
+  }
 </style>
 </head>
 <body>
-<div class="app">
-  <div class="brand">S U I M I R A</div>
 
-  <!-- ===== VIEW 1: WALL ===== -->
-  <div id="vWall">
-    <div class="h">你想變成誰？</div>
-    <div class="sub">選一個 look，我一步步教你畫成這樣</div>
-    <div class="wall">
-      <div class="look" onclick="openLook('linxiang')">
-        <img src="look-linxiang.jpg" alt="林襄">
-        <div class="nm">戀愛氛圍感<small>暖粉水光 · 韓系</small></div>
-      </div>
-      <div class="look soon"><div class="ph">+ 你的目標<br>（即將推出）</div><div class="nm">上傳你想變成的<small>你想變成誰／什麼（soon）</small></div></div>
-    </div>
-  </div>
+<div class="ambient"></div>
+<div class="glow-blob glow-1"></div>
+<div class="glow-blob glow-2"></div>
 
-  <!-- ===== VIEW 2: TARGET ===== -->
-  <div id="vTarget" class="hidden">
-    <div class="h">你想變成這個 look</div>
-    <div class="sub" id="tSub">戀愛氛圍感 · 暖粉水光</div>
-    <div class="hero"><img id="tImg" src="look-linxiang.jpg" alt="target"></div>
-    <div class="tcta">
-      <button class="btn" onclick="startTeach()">📸 教我畫成這樣 →</button>
-      <button class="btn ghost" onclick="showWall()">← 換一個 look</button>
-    </div>
-  </div>
+<main>
 
-  <!-- ===== VIEW 3: TEACH ===== -->
-  <div id="vTeach" class="hidden">
-    <!-- 3a 教學進行中 -->
-    <div id="doing">
-      <div class="h" style="font-size:18px;">跟著畫 · 戀愛氛圍感</div>
-      <div class="stage">
-        <video id="video" playsinline muted></video>
-        <canvas id="cv"></canvas>
-        <div class="stagehint" id="hint">點下面開始 → 打開前鏡頭</div>
-      </div>
-      <div class="status" id="status"></div>
-      <div class="card">
-        <div class="stepnum" id="sNum">STEP 1 / 8</div>
-        <div class="stepname" id="sName">—</div>
-        <div class="where" id="sWhere">—</div>
-        <span class="sku" id="sSku"></span>
-      </div>
-      <div class="nav">
-        <button id="prev" onclick="step(-1)">‹ 上一步</button>
-        <button id="next" class="primary" onclick="step(1)">下一步 ›</button>
-      </div>
-      <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
+  <!-- NAV -->
+  <nav>
+    <div>
+      <div class="serif logo">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
+      <span class="logo-sub">SUIMIRA</span>
     </div>
+    <div class="nav-links">
+      <a href="#features" data-en="Features" data-zh="特色">Features</a>
+      <a href="#experience" data-en="Experience" data-zh="體驗">Experience</a>
+      <a href="#about" data-en="About" data-zh="關於">About</a>
+      <button id="lang-toggle" class="lang-toggle" title="Switch language">中</button>
+    </div>
+  </nav>
 
-    <!-- 3b 完成 → 留 email + 回饋 -->
-    <div id="done" class="hidden">
-      <div class="h">🎉 你完成戀愛氛圍感妝了！</div>
-      <div class="sub">覺得怎麼樣？留個想法給 Dory 🤍</div>
-      <div class="card" id="fbCard">
-        <div class="stepname" style="font-size:15px;">💬 留個想法（都選填）</div>
-        <div class="where" style="color:var(--muted);margin-bottom:8px;">哪裡喜歡 / 哪裡怪 / 想要什麼功能？</div>
-        <form id="fb" action="https://formspree.io/f/mwvzzqay" method="POST">
-          <textarea name="message" rows="3" placeholder="想法 / 建議（選填）…"
-            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;background:#fff;resize:vertical;"></textarea>
-          <input type="text" name="contact" placeholder="暱稱或 email（選填，想被回覆再留）"
-            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:8px;background:#fff;">
-          <button type="submit" class="btn" style="margin-top:8px;">送出 →</button>
-        </form>
-        <div id="fbOk" class="hidden" style="text-align:center;color:#2e7d32;font-weight:600;padding:10px;">🤍 收到了，謝謝你的回饋！</div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow" data-en="Live AR Makeup Mirror" data-zh="即時 AR 化妝鏡">Live AR Makeup Mirror</p>
+        <h2 class="serif" data-en-html="Bring the look —<br>we'll show you where to paint." data-zh-html="你想畫的妝 —<br>我們告訴你畫在哪裡。">Bring the look —<br>we'll show you where to paint.</h2>
+        <p class="sub" data-en="A live AR mirror that uses face mesh tracking to show exactly where each makeup zone goes — step-by-step, in real-time, calibrated for Asian face structure." data-zh="即時 AR 鏡子、用 face mesh 追蹤你的臉、一步一步告訴你每個化妝區塊該畫在哪 — 為亞洲臉部結構校準。">
+          A live AR mirror that uses face mesh tracking to show exactly where each makeup zone goes — step-by-step, in real-time, calibrated for Asian face structure.
+        </p>
+        <div class="hero-actions">
+          <a href="mailto:doryg0305@gmail.com?subject=Suimira%20waitlist" class="btn btn-primary" data-en="Join Waitlist" data-zh="加入等候名單">Join Waitlist</a>
+          <a href="./demo.html" class="btn btn-ghost" data-en="Watch Demo" data-zh="看 Demo">Watch Demo</a>
+        </div>
       </div>
-      <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
+
+      <div class="hero-visual">
+        <div class="blob"></div>
+        <div class="hero-card-outer">
+          <div class="hero-card-inner">
+            <div class="hero-card-image">
+              <img src="hero-muse.jpg" alt="Suimira mirror muse — Asian woman at vanity mirror with warm peach lighting" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+  </section>
+
+  <!-- FEATURE CARDS — v3.25: aligned with actual product -->
+  <section id="features" class="features">
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-circle"></div>
+        <h3 class="serif" data-en="Live AR Placement" data-zh="即時 AR 標位">Live AR Placement</h3>
+        <p data-en="Face mesh tracking projects exactly where to paint each makeup zone — markers follow your face in real-time as you turn your head." data-zh="Face mesh 追蹤、精準標出每個化妝區塊的位置 — 你轉頭時 markers 跟著你的臉走、即時。">Face mesh tracking projects exactly where to paint each makeup zone — markers follow your face in real-time as you turn your head.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-circle"></div>
+        <h3 class="serif" data-en="Step-by-Step Build-Up" data-zh="逐步堆疊建構">Step-by-Step Build-Up</h3>
+        <p data-en="Watch your makeup layer on one zone at a time — contour → brow → eyeshadow → blush → highlight → lip. Just like real application." data-zh="看你的妝一層一層加上去 — 修容 → 眉毛 → 眼影 → 腮紅 → 提亮 → 唇彩。跟真正化妝順序一樣。">Watch your makeup layer on one zone at a time — contour → brow → eyeshadow → blush → highlight → lip. Just like real application.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-circle"></div>
+        <h3 class="serif" data-en="Korean Techniques, Asian Faces" data-zh="韓系技法、亞洲臉孔">Korean Techniques, Asian Faces</h3>
+        <p data-en="野生眉, 卧蠶, layered eyeshadow, gradient lip — all calibrated for Asian face structure where Western beauty AR tools fall short." data-zh="野生眉、卧蠶、層次眼影、漸層染唇 — 為亞洲臉部結構校準、西方 beauty AR 工具達不到的精細度。">野生眉, 卧蠶, layered eyeshadow, gradient lip — all calibrated for Asian face structure where Western beauty AR tools fall short.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience" class="experience">
+    <div class="experience-grid">
+      <div class="exp-card exp-wordmark-card">
+        <div class="exp-wordmark serif">su<span class="i-glow">ı<span class="i-dot"></span></span>m<span class="i-glow">ı<span class="i-dot"></span></span>ra</div>
+        <div class="exp-wordmark-sub">SUIMIRA</div>
+        <div class="exp-wordmark-tag">A mirror that understands you.</div>
+      </div>
+      <div>
+        <p class="eyebrow" data-en="How It Works" data-zh="運作方式">How It Works</p>
+        <h2 class="serif" data-en-html="Watch your makeup<br>build up live<br>on your own face." data-zh-html="看你的妝<br>一層一層 build up<br>在你自己臉上。">Watch your makeup<br>build up live<br>on your own face.</h2>
+        <p class="sub" data-en="Pick a look (Korean Warm Pink Sparkle, Coral Tinted Lip, K-pop Clean Girl, or Bare-Face Glow). See the markers appear on your face in real time. Step through 6 makeup zones — each step adds a layer until your finished look. No hardware required, all processing runs in your browser." data-zh="選一個妝容 (韓系暖粉 sparkle、染唇暖橘紅、韓系冷淡、素顏感)。即時看到 markers 出現在你臉上。走過 6 個化妝區塊、每步加一層、直到完成。不需硬體、所有運算都在你的瀏覽器跑。">
+          Pick a look (Korean Warm Pink Sparkle, Coral Tinted Lip, K-pop Clean Girl, or Bare-Face Glow). See the markers appear on your face in real time. Step through 6 makeup zones — each step adds a layer until your finished look. No hardware required, all processing runs in your browser.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="about" class="cta">
+    <div class="cta-card">
+      <div class="cta-inner">
+        <h2 class="serif" data-en-html="Learn pro placement —<br>without the YouTube confusion." data-zh-html="學專業位置 —<br>不再被 YouTube 教學搞混。">Learn pro placement —<br>without the YouTube confusion.</h2>
+        <p data-en="Suimira teaches makeup zone placement in real-time AR on your own face. Korean techniques, Asian face calibration, and step-by-step build-up that mirrors real application." data-zh="Suimira 即時 AR 教你每個化妝區塊的位置、在你自己臉上看。韓系技法、亞洲臉部校準、逐步 build-up 跟真正化妝順序一樣。">Suimira teaches makeup zone placement in real-time AR on your own face. Korean techniques, Asian face calibration, and step-by-step build-up that mirrors real application.</p>
+        <a href="./demo.html" class="btn btn-primary" data-en="Try the live demo →" data-zh="試試 live demo →">Try the live demo →</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Suimira · 2026 · Built with MediaPipe, HTML5 Canvas, and Claude (Anthropic) ·
+    <a href="https://github.com/doryg0305/suimira" target="_blank">GitHub</a>
+    <a href="https://www.linkedin.com/in/dory-kuo/" target="_blank">LinkedIn</a>
+    <a href="mailto:doryg0305@gmail.com">Email</a>
+    <br>
+    All face processing runs entirely client-side. No photos uploaded, no data stored.
+  </footer>
+
+</main>
 
 <script>
-const $=id=>document.getElementById(id);
-let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,lastLm=null;
-
-/* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
-const STEPS=[
- {key:'toner',ic:'💧',name:'1 · 化妝水 Toner',where:'潔面後，化妝水<b>輕拍全臉</b>補水、二次清潔',sku:'保濕化妝水',mode:'base'},
- {key:'serum',ic:'🧴',name:'2 · 精華 Serum',where:'保濕/亮白精華<b>點全臉、輕壓吸收</b>',sku:'保濕 / 亮白精華',mode:'base'},
- {key:'moist',ic:'🌸',name:'3 · 乳液 Moisturizer',where:'鎖水，<b>由中央往外推勻</b>全臉',sku:'保濕乳液 / 面霜',mode:'base'},
- {key:'spf',ic:'☀️',name:'4 · 防曬 SPF（別忘！）',where:'<b>一定要擦</b>、量要夠（約一枚硬幣），全臉均勻',sku:'SPF50 防曬',mode:'base'},
- {key:'primer',ic:'✨',name:'5 · 妝前乳 Primer',where:'平滑毛孔、抓妝，薄薄<b>由中央往外</b>推一層',sku:'平滑 / 控油妝前乳',mode:'base'},
- {key:'base',ic:'🩷',name:'6 · 底妝 Foundation',where:'從<b>臉中央</b>點開 → <b>往外推勻</b>，乾淨透亮、別整片厚塗',sku:'Dior 超完美柔光粉底',mode:'base'},
- {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
-   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
- {key:'highlight',ic:'✨',name:'打亮',where:'沿<b>臉中線</b>提亮：鼻樑、額中、唇珠、下巴 + 眼下（<b>靠近中央</b>才把五官立出來，不是打顴骨外側）',sku:'OFRA Highlighter Cloud9',mode:'sweep',
-   paths:[[6,197,195,5,4],[10,151],[37,0,267],[200,152]],color:'#f0d9b8'},
- {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'在蘋果肌（笑起來鼓的地方）<b>一圈一圈打</b>、暈開；位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop',mode:'blush',
-   paths:[[50,205,118],[280,425,347]],color:'#ff8fa0'},
- {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
-   paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
- {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
-   paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
- {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'brow',
-   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
- {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'①唇珠/人中畫小 <b>C</b> 提亮 ②嘴唇<b>中央上色最深</b> → 往邊緣暈淡 ③下唇中央點一點唇蜜 → 嘟嘟立體',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
-];
-
-/* ---- views ---- */
-function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vTeach').classList.add('hidden');}
-function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vTeach').classList.add('hidden');}
-function stopTeach(){showWall();}
-
-/* ---- MediaPipe ---- */
-async function initModel(){
-  if(landmarker)return landmarker;
-  setStatus('載入 AI 模型中…（第一次幾秒）',true);
-  if(!FaceLandmarker){const m=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");FaceLandmarker=m.FaceLandmarker;FilesetResolver=m.FilesetResolver;}
-  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
-  landmarker=await FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numFaces:1});
-  setStatus('');return landmarker;
-}
-function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
-
-async function startTeach(){
-  $('vTarget').classList.add('hidden');$('vTeach').classList.remove('hidden');
-  cur=0;renderCard();$('doing').classList.remove('hidden');$('done').classList.add('hidden');
-  try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
-  catch(e){setStatus('開不了相機：'+e.message+'（手機要 HTTPS）');return;}
-  $('video').srcObject=stream;await $('video').play();
-  $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 跟著刷子的方向畫 ✨');
-  loop();
-}
-function stopCam(){if(rafId)cancelAnimationFrame(rafId);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
-
-function loop(){
-  if(!stream)return;
-  const v=$('video'),c=$('cv'),x=c.getContext('2d');
-  const W=v.videoWidth,H=v.videoHeight;
-  if(W){c.width=W;c.height=H;x.clearRect(0,0,W,H);
-    const r=landmarker.detectForVideo(v,performance.now());
-    if(r.faceLandmarks&&r.faceLandmarks.length){lastLm=r.faceLandmarks[0];drawGuide(x,lastLm,W,H);}}
-  rafId=requestAnimationFrame(loop);
-}
-
-/* ---- 教學引導渲染：方向掃(重→淺) + 會動的刷子 ---- */
-function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,y:p.y*h}));}
-function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
-function sweep(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
-  const base=Math.max(R*0.011,Math.min(R*0.04,len*0.22));
-  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.40,rad=base*(1-t*0.45);
-    const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
-    g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
-    x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
-}
-function brush(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
-  const ph=(performance.now()%1700)/1700,p=along(P,ph),p2=along(P,Math.min(0.999,ph+0.05));
-  const ang=Math.atan2(p2.y-p.y,p2.x-p.x);
-  x.save();
-  x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
-  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  x.fillStyle='rgba(255,255,255,.4)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.011,0,7);x.fill(); // 起點=重(小)
-  const r=Math.max(R*0.008,Math.min(R*0.015,len*0.09)); // 中空小環、不蓋臉
-  x.lineWidth=R*0.004;x.strokeStyle='rgba(255,255,255,.97)';x.fillStyle=color+'55';
-  x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.stroke();
-  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.97)'; // 小箭頭
-  x.beginPath();x.moveTo(r*1.8,0);x.lineTo(r*0.9,-r*0.7);x.lineTo(r*0.9,r*0.7);x.closePath();x.fill();
-  x.restore();
-}
-const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
-function drawBrowHairs(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  x.save();
-  x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=R*0.0035;x.setLineDash([R*0.01,R*0.01]);
-  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  const N=12,hl=R*0.022;
-  for(let i=0;i<=N;i++){const p=along(P,i/N);
-    x.strokeStyle=color+'cc';x.lineWidth=R*0.0035;
-    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-hl*0.5,p.y-hl);x.stroke();} // 一根根往上斜=毛流
-  const ph=(performance.now()%1600)/1600,c=along(P,ph),r=R*0.011;
-  x.fillStyle=color+'55';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
-  x.beginPath();x.arc(c.x,c.y,r,0,7);x.fill();x.stroke();
-  x.restore();
-}
-function drawBlush(x,lm,idxs,color,w,h){
-  const ps=idxs.map(i=>lm[i]).filter(p=>p);if(!ps.length)return;
-  const cx=ps.reduce((a,p)=>a+p.x,0)/ps.length*w, cy=ps.reduce((a,p)=>a+p.y,0)/ps.length*h;
-  const R=Math.max(w,h),rad=R*0.058;
-  x.save();x.globalCompositeOperation='multiply'; // 柔圓腮紅
-  const g=x.createRadialGradient(cx,cy,0,cx,cy,rad);
-  g.addColorStop(0,color+'5a');g.addColorStop(.6,color+'22');g.addColorStop(1,color+'00');
-  x.fillStyle=g;x.beginPath();x.arc(cx,cy,rad,0,7);x.fill();x.restore();
-  x.save(); // 畫圈 cursor
-  const cr=rad*0.5,ph=performance.now()/350;
-  x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=R*0.004;x.setLineDash([R*0.012,R*0.012]);
-  x.beginPath();x.arc(cx,cy,cr,0,7);x.stroke();x.setLineDash([]);
-  const px=cx+cr*Math.cos(ph),py=cy+cr*Math.sin(ph),r=R*0.013;
-  x.fillStyle=color+'66';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
-  x.beginPath();x.arc(px,py,r,0,7);x.fill();x.stroke();x.restore();
-}
-function drawGuide(x,lm,w,h){
-  const s=STEPS[cur];
-  if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
-    const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
-    let P=pts(lm,O,w,h);if(P.length<6)return;
-    const cx=P.reduce((a,p)=>a+p.x,0)/P.length, cy=P.reduce((a,p)=>a+p.y,0)/P.length;
-    const SC=1.13, UP=Math.max(w,h)*0.05;
-    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 額頭(上半)再往上推到髮際
-    x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
-    x.globalCompositeOperation='soft-light';x.globalAlpha=.18;x.fillStyle='#fff1e4';x.fill();x.restore(); // 淡勻膚、不是面膜
-    // 全臉「輕拍」示意：分散全臉的點輪流亮 = 整臉都要（不是一條路徑）
-    const spots=[10,151,108,337,50,280,118,347,205,425,168,2,200,152];
-    const ph=performance.now()/600;
-    x.save();
-    for(let i=0;i<spots.length;i++){const q=lm[spots[i]];if(!q)return;
-      const a=0.18+0.30*Math.max(0,Math.sin(ph+i*0.9)),rr=Math.max(w,h)*0.024;
-      const g=x.createRadialGradient(q.x*w,q.y*h,0,q.x*w,q.y*h,rr);
-      g.addColorStop(0,'rgba(255,250,244,'+a+')');g.addColorStop(1,'rgba(255,250,244,0)');
-      x.fillStyle=g;x.beginPath();x.arc(q.x*w,q.y*h,rr,0,7);x.fill();}
-    x.restore();
-    return;
-  }
-  if(s.mode==='lip'){ // 嘟嘟唇：中央深→邊緣淡 + 唇珠小C + 下唇唇蜜
-    const P=pts(lm,LIP,w,h);if(P.length<8||!lm[13]||!lm[14])return;const R=Math.max(w,h);
-    x.save();
-    x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.clip();
-    x.globalCompositeOperation='multiply';
-    x.globalAlpha=.26;x.fillStyle=s.color;x.fillRect(0,0,w,h); // 全唇淡底
-    const cx=lm[13].x*w,cy=((lm[13].y+lm[14].y)/2)*h; // 中央最深
-    const g=x.createRadialGradient(cx,cy,0,cx,cy,R*0.06);
-    g.addColorStop(0,s.color+'cc');g.addColorStop(.55,s.color+'55');g.addColorStop(1,s.color+'00');
-    x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,w,h);
-    x.restore();
-    const ph=(performance.now()%1500)/1500,a=.4+.3*Math.sin(ph*6.28);
-    x.save();x.globalCompositeOperation='screen';x.fillStyle='rgba(255,246,238,'+a+')';
-    if(lm[0]){x.beginPath();x.arc(lm[0].x*w,lm[0].y*h,R*0.013,0,7);x.fill();} // 唇珠小C提亮
-    x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.018,0,7);x.fill(); // 下唇中央唇蜜
-    x.restore();
-    return;}
-  if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
-  if(s.mode==='blush'){(s.paths||[]).forEach(P=>drawBlush(x,lm,P,s.color,w,h));return;}
-  // sweep mode — 多區各自 sweep + brush
-  x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
-}
-
-/* ---- step nav ---- */
-function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / ${STEPS.length}`;
-  $('sName').textContent=s.ic+' '+s.name;$('sWhere').innerHTML=s.where;$('sSku').textContent=s.sku;
-  $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';}
-function step(d){if(d>0&&cur===STEPS.length-1){finish();return;}cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
-function finish(){stopCam();$('doing').classList.add('hidden');$('done').classList.remove('hidden');}
-renderCard();
-// feedback form → Formspree（看得到是誰 + 回饋）
-(function(){var f=$('fb');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();
-  fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
-   .then(function(){f.classList.add('hidden');$('fbOk').classList.remove('hidden');})
-   .catch(function(){f.submit();});});})();
+  // v3.28: EN / 中 language toggle
+  (function(){
+    const btn = document.getElementById('lang-toggle');
+    if (!btn) return;
+    function setLang(lang){
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const val = el.getAttribute('data-' + lang);
+        if (val !== null) el.textContent = val;
+      });
+      document.querySelectorAll('[data-en-html]').forEach(el => {
+        const val = el.getAttribute('data-' + lang + '-html');
+        if (val !== null) el.innerHTML = val;
+      });
+      btn.textContent = lang === 'en' ? '中' : 'EN';
+      document.documentElement.lang = lang === 'en' ? 'en' : 'zh-Hant';
+      try { localStorage.setItem('suimira-lang', lang); } catch(e){}
+    }
+    const saved = (function(){
+      try { return localStorage.getItem('suimira-lang'); } catch(e){ return null; }
+    })();
+    let current = saved || 'en';
+    setLang(current);
+    btn.addEventListener('click', () => {
+      current = current === 'en' ? 'zh' : 'en';
+      setLang(current);
+    });
+  })();
 </script>
-<script data-goatcounter="https://suimira.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
 </body>
 </html>

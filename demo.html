@@ -234,12 +234,12 @@ function brushSweep(x,lm,idx,prog,w,h,color,bs){
   bs=bs||1;
   const P=idx.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
   const R=Math.max(w,h);
+  // ① 圈起來：整條區域用虛線標出來「打這裡」（整個示範窗都在）
   x.save();x.lineCap='round';x.lineJoin='round';
-  x.globalAlpha=.4;x.strokeStyle=color;x.lineWidth=R*0.011*bs;
-  const upto=prog*(P.length-1);
-  x.beginPath();x.moveTo(P[0].x,P[0].y);
-  for(let k=1;k<P.length;k++){if(k<=upto){x.lineTo(P[k].x,P[k].y);}else{const f=upto-(k-1);if(f>0){x.lineTo(P[k-1].x+(P[k].x-P[k-1].x)*f,P[k-1].y+(P[k].y-P[k-1].y)*f);}break;}}
-  x.stroke();x.restore();
+  x.globalAlpha=.7;x.strokeStyle=color;x.lineWidth=R*0.009*bs;x.setLineDash([R*0.014,R*0.01]);
+  x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();
+  x.setLineDash([]);x.restore();
+  // ② cursor 沿區域移動：教「怎麼刷」
   const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,bs);
 }
 /* 腮紅：一圈一圈繞蘋果肌 */

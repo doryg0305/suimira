@@ -289,9 +289,7 @@ function contourHint(x,lm,idx,prog,w,h,color){
     g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
     x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
   x.restore();
-  x.save();x.globalAlpha=.5;x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=R*0.005;x.setLineDash([R*0.012,R*0.01]);
-  x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();x.setLineDash([]);x.restore();
-  const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,1); // 從重(起點)往淺掃
+  const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,1); // 從重(起點)往淺掃；區域圈由 zonePath 永遠標
 }
 /* 永遠顯示的「打哪裡」虛線圈（不用等 cursor）*/
 function zonePath(x,lm,idx,w,h){

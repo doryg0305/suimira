@@ -5,70 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Suimira · 你想變成這個 look</title>
 <style>
-  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
-    --line:#ecdfd4;--card:#fff;--chip:#f6ece4;}
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;--line:#ecdfd4;--card:#fff;--chip:#f6ece4;}
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
   .app{max-width:440px;margin:0 auto;min-height:100vh;}
   .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
-  .h{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:500;text-align:center;margin:2px 16px 2px;}
+  .h{font-family:"Cormorant Garamond",Georgia,serif;font-size:24px;font-weight:500;text-align:center;margin:2px 16px;}
   .sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
   .hidden{display:none!important;}
-
+  .iab{margin:6px 16px;background:#fff4e5;border:1px solid #f3d9a8;border-radius:14px;padding:12px 14px;font-size:13px;color:#8a5a1a;}
   /* WALL */
   .wall{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:6px 16px 30px;}
-  .look{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;
-    cursor:pointer;box-shadow:0 3px 12px rgba(150,90,90,.08);transition:transform .15s;}
+  .look{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 3px 12px rgba(150,90,90,.08);transition:transform .15s;}
   .look:active{transform:scale(.97);}
   .look img{width:100%;height:160px;object-fit:cover;display:block;background:#eadfd5;}
   .look .nm{padding:8px 10px;font-size:13px;font-weight:600;}
   .look .nm small{display:block;color:var(--muted);font-weight:400;font-size:11px;}
   .look.soon{opacity:.55;}
   .look.soon .ph{height:160px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:#f1e7dd;}
-
   /* TARGET */
   .hero{margin:0 16px;border-radius:20px;overflow:hidden;box-shadow:0 8px 28px rgba(150,90,90,.18);}
   .hero img{width:100%;display:block;}
   .tcta{padding:14px 16px 26px;}
-  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
-    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
+  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
   .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;font-weight:600;font-size:13px;padding:8px;}
-
-  /* TEACH */
-  .stage{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
-  .stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
-  .stage video{transform:scaleX(-1);} .stage canvas{transform:scaleX(-1);}
-  .stagehint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    text-align:center;color:#fff;font-size:13px;padding:0 30px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.6);}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;}
   .card .stepnum{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:.1em;}
   .card .stepname{font-size:17px;font-weight:700;margin:2px 0 6px;}
   .card .where{font-size:13.5px;margin:3px 0;}
   .card .where b{color:var(--rose);}
-  .card .sku{display:inline-block;margin-top:7px;font-size:11px;background:var(--chip);border:1px solid var(--line);
-    border-radius:20px;padding:3px 10px;color:#7a5a3a;font-weight:600;}
-  .nav{display:flex;gap:10px;padding:0 16px 24px;}
+  .card .sku{display:inline-block;margin-top:7px;font-size:11px;background:var(--chip);border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:#7a5a3a;font-weight:600;}
+  /* TABS（鏡子 / 怎麼做）*/
+  .tabs{display:flex;background:#f1e7dd;border-radius:14px;padding:4px;gap:4px;margin:0 16px 10px;}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border:none;background:transparent;}
+  .tab.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(190,120,120,.12);}
+  /* 鏡子 */
+  .mirror{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+  .mirror video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+  .mhint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:14px;padding:0 30px;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  .startbtn{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);border:none;border-radius:24px;padding:13px 26px;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.4);cursor:pointer;}
+  .cleanline{text-align:center;font-size:12px;color:var(--muted);margin:8px 16px 0;}
+  /* 怎麼做 */
+  .howwrap{margin:0 16px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;}
+  .howwrap iframe{width:100%;height:520px;border:0;display:block;}
+  .howtbd{margin-top:10px;font-size:12.5px;color:var(--muted);background:#f6ece4;border-radius:10px;padding:10px 12px;}
+  .nav{display:flex;gap:10px;padding:0 16px 6px;margin-top:12px;}
   .nav button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:13px;padding:13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
   .nav button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));}
   .nav button:disabled{opacity:.4;}
-  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 16px 6px;}
-  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;margin-right:6px;vertical-align:-1px;}
-  @keyframes s{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="brand">S U I M I R A</div>
 
-  <!-- in-app browser 警告（IG/LINE/FB 內建瀏覽器會擋相機）-->
-  <div id="iabWarn" class="hidden" style="margin:6px 16px 0;background:#fff4e5;border:1px solid #f3d9a8;border-radius:14px;padding:12px 14px;font-size:13px;color:#8a5a1a;">
-    ⚠️ 你好像是在 App（IG／LINE／FB）裡打開的，它會擋住相機。<br>
-    請點右上角「⋯」→「<b>用瀏覽器開啟</b>」（Safari／Chrome），相機才能用。
-    <button onclick="navigator.clipboard&&navigator.clipboard.writeText('https://suimira.com').then(()=>{this.textContent='已複製 ✓'})"
-      style="display:block;width:100%;margin-top:10px;border:none;border-radius:11px;padding:10px;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));cursor:pointer;">
-      複製連結 suimira.com</button>
-  </div>
+  <div id="iab" class="iab hidden">⚠️ 你好像在 App（IG／LINE／FB）裡開的，相機會被擋。請用 <b>Safari／Chrome</b> 開：右上角「⋯」→「用瀏覽器開啟」。</div>
 
   <!-- ===== VIEW 1: WALL ===== -->
   <div id="vWall">
@@ -94,7 +85,7 @@
     </div>
   </div>
 
-  <!-- ===== VIEW 2.5: PREP（保養 checklist，不做 AR，只展示）===== -->
+  <!-- ===== VIEW 2.5: PREP（保養 checklist）===== -->
   <div id="vPrep" class="hidden">
     <div class="h" style="font-size:19px;">開始上妝前 ☀️</div>
     <div class="sub">這些保養先整臉拍勻就好 — 整臉都要、不用看位置</div>
@@ -108,23 +99,36 @@
     </div>
   </div>
 
-  <!-- ===== VIEW 3: TEACH ===== -->
+  <!-- ===== VIEW 3: TEACH（鏡子 / 怎麼做 切換）===== -->
   <div id="vTeach" class="hidden">
-    <!-- 3a 教學進行中 -->
     <div id="doing">
-      <div class="h" style="font-size:18px;">跟著畫 · 戀愛氛圍感</div>
-      <div class="stage">
-        <video id="video" playsinline muted></video>
-        <canvas id="cv"></canvas>
-        <div class="stagehint" id="hint">點下面開始 → 打開前鏡頭</div>
+      <div class="h" style="font-size:17px;">跟著畫 · 戀愛氛圍感</div>
+      <div class="tabs">
+        <button class="tab on" id="tabM" onclick="showTab('m')">🪞 鏡子（看自己）</button>
+        <button class="tab" id="tabH" onclick="showTab('h')">📋 怎麼做</button>
       </div>
-      <div class="status" id="status"></div>
+
+      <!-- 鏡子：乾淨自拍，不糊記號 -->
+      <div id="viewM">
+        <div class="mirror">
+          <video id="video" playsinline muted></video>
+          <div class="mhint" id="mhint">乾淨鏡子 — 看著自己，切「怎麼做」看手法跟著做</div>
+          <button class="startbtn" id="startbtn" onclick="startCam()">📸 開鏡子</button>
+        </div>
+        <div class="cleanline">鏡子只給你看自己 · 手法在「📋 怎麼做」🤍</div>
+      </div>
+
+      <!-- 怎麼做：示意動畫 / 位置說明，不疊你的臉 -->
+      <div id="viewH" class="hidden"><div id="howContent"></div></div>
+
+      <!-- 這一步的位置/重點說明 -->
       <div class="card">
-        <div class="stepnum" id="sNum">STEP 1 / 8</div>
+        <div class="stepnum" id="sNum">STEP 1 / 9</div>
         <div class="stepname" id="sName">—</div>
         <div class="where" id="sWhere">—</div>
         <span class="sku" id="sSku"></span>
       </div>
+
       <div class="nav">
         <button id="prev" onclick="step(-1)">‹ 上一步</button>
         <button id="next" class="primary" onclick="step(1)">下一步 ›</button>
@@ -132,7 +136,7 @@
       <div class="tcta" style="padding-top:0;"><button class="btn ghost" onclick="stopTeach()">← 回 look 牆</button></div>
     </div>
 
-    <!-- 3b 完成 → 留 email + 回饋 -->
+    <!-- 完成 → 回饋 -->
     <div id="done" class="hidden">
       <div class="h">🎉 你完成戀愛氛圍感妝了！</div>
       <div class="sub">覺得怎麼樣？留個想法給 Dory 🤍</div>
@@ -140,10 +144,8 @@
         <div class="stepname" style="font-size:15px;">💬 留個想法（都選填）</div>
         <div class="where" style="color:var(--muted);margin-bottom:8px;">哪裡喜歡 / 哪裡怪 / 想要什麼功能？</div>
         <form id="fb" action="https://formspree.io/f/mwvzzqay" method="POST">
-          <textarea name="message" rows="3" placeholder="想法 / 建議（選填）…"
-            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;background:#fff;resize:vertical;"></textarea>
-          <input type="text" name="contact" placeholder="暱稱或 email（選填，想被回覆再留）"
-            style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:8px;background:#fff;">
+          <textarea name="message" rows="3" placeholder="想法 / 建議（選填）…" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;background:#fff;resize:vertical;"></textarea>
+          <input type="text" name="contact" placeholder="暱稱或 email（選填，想被回覆再留）" style="width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;margin-top:8px;background:#fff;">
           <button type="submit" class="btn" style="margin-top:8px;">送出 →</button>
         </form>
         <div id="fbOk" class="hidden" style="text-align:center;color:#2e7d32;font-weight:600;padding:10px;">🤍 收到了，謝謝你的回饋！</div>
@@ -155,194 +157,77 @@
 
 <script>
 const $=id=>document.getElementById(id);
-let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,lastLm=null;
+let stream=null,cur=0,howLoaded='';
 
-/* ---- 相機環境偵測 + 友善錯誤（讓朋友真的開得了相機）---- */
 function isInApp(){return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Messenger|MicroMessenger|Twitter|TikTok/i.test(navigator.userAgent||'');}
-function camError(e){
-  const n=(e&&e.name)||'';let msg;
-  if(isInApp()) msg='請改用 Safari／Chrome 開這個頁面：點右上角「⋯」→「用瀏覽器開啟」。App（IG／LINE／FB）內建瀏覽器會擋相機。';
-  else if(n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError') msg='相機權限被擋了。請按「允許」使用相機；若之前按過拒絕，到瀏覽器網址列旁的鎖頭 → 開啟相機 → 重新整理再試。';
-  else if(n==='NotFoundError'||n==='OverconstrainedError'||n==='DevicesNotFoundError') msg='找不到可用的前鏡頭。';
-  else if(n==='NotReadableError'||n==='TrackStartError') msg='相機被其他 App 佔用了。先關掉其他在用相機的 App，再重新整理試一次。';
-  else msg='開不了相機（'+(e.message||n||'未知')+'）。請改用 Safari／Chrome，並允許相機權限。';
-  setStatus('⚠️ '+msg);
-  const h=$('hint');if(h){h.classList.remove('hidden');h.innerHTML='⚠️ '+msg;}
-}
+if(isInApp())$('iab').classList.remove('hidden');
 
-/* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
+/* 步驟（只用 name/ic/where/sku；鏡子乾淨、不在臉上畫）*/
 const STEPS=[
- {key:'primer',ic:'✨',name:'1 · 妝前乳 Primer',where:'平滑毛孔、抓妝，薄薄<b>由中央往外</b>推一層',sku:'平滑 / 控油妝前乳',mode:'base'},
- {key:'base',ic:'🩷',name:'2 · 底妝 Foundation',where:'從<b>臉中央</b>點開 → <b>往外推勻</b>，乾淨透亮、別整片厚塗',sku:'Dior 超完美柔光粉底',mode:'base'},
- {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
-   paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
- {key:'highlight',ic:'✨',name:'打亮（點上再拍開做立體）',where:'點在這幾處、再<b>拍開</b>做出立體感：<b>山根→鼻樑→鼻頭</b>（頭尾最亮）、額中、<b>眼頭</b>、眼下三角（鼻側）、唇珠、嘴角、下巴',sku:'OFRA Highlighter Cloud9',mode:'sweep',
-   paths:[[168,6,197,195,4,1],[10,151,9],[133,243],[362,463],[118,117,101],[347,346,330],[37,0,267],[61,185],[291,409],[199,175,200]],color:'#f0d9b8'},
- {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'在蘋果肌（笑起來鼓的地方）<b>一圈一圈打</b>、暈開；位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop',mode:'blush',
-   paths:[[50,205,118],[280,425,347]],color:'#ff8fa0'},
- {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色',mode:'sweep',
-   paths:[[133,145,153],[362,374,380]],color:'#fff0e0'},
- {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>（深到淺）；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜',mode:'sweep',
-   paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a'},
- {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然、不要框死',sku:'灰棕眉筆/眉粉',mode:'brow',
-   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#6a4a34'},
- {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'①唇珠/人中畫小 <b>C</b> 提亮 ②嘴唇<b>中央上色最深</b> → 往邊緣暈淡 ③下唇中央點一點唇蜜 → 嘟嘟立體',sku:'rom&nd 15 Berry Fizz',mode:'lip',color:'#e0808f'},
+ {key:'primer',ic:'✨',name:'1 · 妝前乳 Primer',where:'刮刀<b>抹</b>開薄薄一層、再用<b>濕海綿拍勻</b>（看「怎麼做」）',sku:'平滑 / 控油妝前乳'},
+ {key:'base',ic:'🩷',name:'2 · 底妝 Foundation',where:'從<b>臉中央</b>抹開 → 往外推勻 → <b>濕海綿拍勻</b>，乾淨透亮、別厚塗',sku:'Dior 超完美柔光粉底'},
+ {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉。髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容'},
+ {key:'highlight',ic:'✨',name:'打亮（點上再拍開做立體）',where:'點再<b>拍開</b>：<b>山根→鼻樑→鼻頭</b>(頭尾最亮)、額中、<b>眼頭</b>、眼下三角(鼻側)、唇珠、嘴角、下巴',sku:'OFRA Highlighter Cloud9'},
+ {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'在蘋果肌（笑起來鼓的地方）<b>一圈一圈打</b>、暈開；位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop'},
+ {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>那條輕掃珠光、撐出臥蠶 → 眼睛變大（不是打在眼睛上）',sku:'珠光香檳色'},
+ {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾 + 睫毛根最深</b> → 往眼頭、往上<b>暈淡</b>；下眼尾帶一點點接腮紅',sku:'LUMMIR 02 夏日午夜'},
+ {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順<b>毛流</b>一根根補：<b>眉頭最淡、眉尾稍實</b>、缺的地方補就好——自然',sku:'灰棕眉筆/眉粉'},
+ {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'①唇珠畫小 <b>C</b> 提亮 ②嘴唇<b>中央上色最深</b> → 往邊緣暈淡 ③下唇中央點唇蜜 → 嘟嘟立體',sku:'rom&nd 15 Berry Fizz'},
 ];
 
-/* ---- views ---- */
-function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.add('hidden');}
-function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.add('hidden');}
-function showPrep(){$('vTarget').classList.add('hidden');$('vPrep').classList.remove('hidden');}
+/* views */
+function hideAll(){['vWall','vTarget','vPrep','vTeach'].forEach(v=>$(v).classList.add('hidden'));}
+function showWall(){stopCam();hideAll();$('vWall').classList.remove('hidden');}
+function openLook(k){hideAll();$('vTarget').classList.remove('hidden');}
+function showPrep(){hideAll();$('vPrep').classList.remove('hidden');}
 function stopTeach(){showWall();}
+function startTeach(){hideAll();$('vTeach').classList.remove('hidden');cur=0;showTab('m');renderCard();$('doing').classList.remove('hidden');$('done').classList.add('hidden');}
 
-/* ---- MediaPipe ---- */
-async function initModel(){
-  if(landmarker)return landmarker;
-  setStatus('載入 AI 模型中…（第一次幾秒）',true);
-  if(!FaceLandmarker){const m=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");FaceLandmarker=m.FaceLandmarker;FilesetResolver=m.FilesetResolver;}
-  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
-  landmarker=await FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numFaces:1});
-  setStatus('');return landmarker;
-}
-function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
+/* tabs */
+function showTab(t){const m=t==='m';
+  $('viewM').classList.toggle('hidden',!m);$('viewH').classList.toggle('hidden',m);
+  $('tabM').classList.toggle('on',m);$('tabH').classList.toggle('on',!m);}
 
-async function startTeach(){
-  $('vTarget').classList.add('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.remove('hidden');
-  cur=0;renderCard();$('doing').classList.remove('hidden');$('done').classList.add('hidden');
-  try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camError({name:isInApp()?'InApp':'Unsupported',message:'此瀏覽器不支援相機'});return;}
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
-  catch(e){camError(e);return;}
-  $('video').srcObject=stream;await $('video').play();
-  $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 跟著刷子的方向畫 ✨');
-  loop();
-}
-function stopCam(){if(rafId)cancelAnimationFrame(rafId);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
-
-function loop(){
-  if(!stream)return;
-  const v=$('video'),c=$('cv'),x=c.getContext('2d');
-  const W=v.videoWidth,H=v.videoHeight;
-  if(W){c.width=W;c.height=H;x.clearRect(0,0,W,H);
-    const r=landmarker.detectForVideo(v,performance.now());
-    if(r.faceLandmarks&&r.faceLandmarks.length){lastLm=r.faceLandmarks[0];drawGuide(x,lastLm,W,H);}}
-  rafId=requestAnimationFrame(loop);
-}
-
-/* ---- 教學引導渲染：方向掃(重→淺) + 會動的刷子 ---- */
-function pts(lm,idx,w,h){return idx.map(i=>lm[i]).filter(p=>p).map(p=>({x:p.x*w,y:p.y*h}));}
-function along(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
-function sweep(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
-  const base=Math.max(R*0.011,Math.min(R*0.04,len*0.22));
-  for(let t=0;t<=1.0001;t+=0.04){const p=along(P,t);const a=(1-t)*(1-t)*0.40,rad=base*(1-t*0.45);
-    const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,rad);
-    g.addColorStop(0,color+Math.round(a*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
-    x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,rad,0,7);x.fill();}
-}
-function brush(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  let len=0;for(let k=1;k<P.length;k++)len+=Math.hypot(P[k].x-P[k-1].x,P[k].y-P[k-1].y);
-  const ph=(performance.now()%1700)/1700,p=along(P,ph),p2=along(P,Math.min(0.999,ph+0.05));
-  const ang=Math.atan2(p2.y-p.y,p2.x-p.x);
-  x.save();
-  x.strokeStyle='rgba(255,255,255,.95)';x.lineWidth=R*0.006;x.setLineDash([R*0.014,R*0.012]);
-  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  x.fillStyle='rgba(255,255,255,.4)';x.beginPath();x.arc(P[0].x,P[0].y,R*0.011,0,7);x.fill(); // 起點=重(小)
-  const r=Math.max(R*0.008,Math.min(R*0.015,len*0.09)); // 中空小環、不蓋臉
-  x.lineWidth=R*0.004;x.strokeStyle='rgba(255,255,255,.97)';x.fillStyle=color+'55';
-  x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill();x.stroke();
-  x.translate(p.x,p.y);x.rotate(ang);x.fillStyle='rgba(255,255,255,.97)'; // 小箭頭
-  x.beginPath();x.moveTo(r*1.8,0);x.lineTo(r*0.9,-r*0.7);x.lineTo(r*0.9,r*0.7);x.closePath();x.fill();
-  x.restore();
-}
-const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
-function drawBrowHairs(x,lm,idx,color,w,h){
-  const P=pts(lm,idx,w,h);if(P.length<2)return;const R=Math.max(w,h);
-  x.save();
-  x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=R*0.0035;x.setLineDash([R*0.01,R*0.01]);
-  x.beginPath();P.forEach((q,k)=>k?x.lineTo(q.x,q.y):x.moveTo(q.x,q.y));x.stroke();x.setLineDash([]);
-  const N=12,hl=R*0.022;
-  for(let i=0;i<=N;i++){const p=along(P,i/N);
-    x.strokeStyle=color+'cc';x.lineWidth=R*0.0035;
-    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-hl*0.5,p.y-hl);x.stroke();} // 一根根往上斜=毛流
-  const ph=(performance.now()%1600)/1600,c=along(P,ph),r=R*0.011;
-  x.fillStyle=color+'55';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
-  x.beginPath();x.arc(c.x,c.y,r,0,7);x.fill();x.stroke();
-  x.restore();
-}
-function drawBlush(x,lm,idxs,color,w,h){
-  const ps=idxs.map(i=>lm[i]).filter(p=>p);if(!ps.length)return;
-  const cx=ps.reduce((a,p)=>a+p.x,0)/ps.length*w, cy=ps.reduce((a,p)=>a+p.y,0)/ps.length*h;
-  const R=Math.max(w,h),rad=R*0.058;
-  x.save();x.globalCompositeOperation='multiply'; // 柔圓腮紅
-  const g=x.createRadialGradient(cx,cy,0,cx,cy,rad);
-  g.addColorStop(0,color+'5a');g.addColorStop(.6,color+'22');g.addColorStop(1,color+'00');
-  x.fillStyle=g;x.beginPath();x.arc(cx,cy,rad,0,7);x.fill();x.restore();
-  x.save(); // 畫圈 cursor
-  const cr=rad*0.5,ph=performance.now()/350;
-  x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=R*0.004;x.setLineDash([R*0.012,R*0.012]);
-  x.beginPath();x.arc(cx,cy,cr,0,7);x.stroke();x.setLineDash([]);
-  const px=cx+cr*Math.cos(ph),py=cy+cr*Math.sin(ph),r=R*0.013;
-  x.fillStyle=color+'66';x.strokeStyle='rgba(255,255,255,.97)';x.lineWidth=R*0.004;
-  x.beginPath();x.arc(px,py,r,0,7);x.fill();x.stroke();x.restore();
-}
-function drawGuide(x,lm,w,h){
-  const s=STEPS[cur];
-  if(s.mode==='base'){ // 全臉鋪底妝：往外擴 + 額頭往上到髮際（原本沒蓋滿）
-    const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
-    let P=pts(lm,O,w,h);if(P.length<6)return;
-    const cx=P.reduce((a,p)=>a+p.x,0)/P.length, cy=P.reduce((a,p)=>a+p.y,0)/P.length;
-    const SC=1.0, UP=0;
-    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 緊貼臉部輪廓、不外擴（跟 face-lab 一致）
-    x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
-    x.globalCompositeOperation='soft-light';x.globalAlpha=.18;x.fillStyle='#fff1e4';x.fill();x.restore(); // 淡勻膚、不是面膜
-    // 全臉「輕拍」示意：分散全臉的點輪流亮 = 整臉都要（不是一條路徑）
-    const spots=[10,151,108,337,50,280,118,347,205,425,168,2,200,152];
-    const ph=performance.now()/600;
-    x.save();
-    for(let i=0;i<spots.length;i++){const q=lm[spots[i]];if(!q)return;
-      const a=0.18+0.30*Math.max(0,Math.sin(ph+i*0.9)),rr=Math.max(w,h)*0.024;
-      const g=x.createRadialGradient(q.x*w,q.y*h,0,q.x*w,q.y*h,rr);
-      g.addColorStop(0,'rgba(255,250,244,'+a+')');g.addColorStop(1,'rgba(255,250,244,0)');
-      x.fillStyle=g;x.beginPath();x.arc(q.x*w,q.y*h,rr,0,7);x.fill();}
-    x.restore();
-    return;
+/* 怎麼做內容（primer/底妝 = 手法動畫；其他 = 位置說明 + 動畫製作中）*/
+function renderHow(){const s=STEPS[cur],h=$('howContent');
+  if(s.key==='primer'||s.key==='base'){
+    if(howLoaded!=='anim'){h.innerHTML='<div class="howwrap"><iframe src="./primer-anim.html" title="手法示範"></iframe></div>';howLoaded='anim';}
+  }else{
+    howLoaded='';
+    h.innerHTML='<div class="card"><div class="stepname">'+s.ic+' '+s.name+'</div><div class="where">'+s.where+'</div>'
+      +'<div class="howtbd">這一步的手法示意動畫製作中 — 先照上面的位置說明，對著左邊鏡子做 🤍</div></div>';
   }
-  if(s.mode==='lip'){ // 嘟嘟唇：中央深→邊緣淡 + 唇珠小C + 下唇唇蜜
-    const P=pts(lm,LIP,w,h);if(P.length<8||!lm[13]||!lm[14])return;const R=Math.max(w,h);
-    x.save();
-    x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.clip();
-    x.globalCompositeOperation='multiply';
-    x.globalAlpha=.26;x.fillStyle=s.color;x.fillRect(0,0,w,h); // 全唇淡底
-    const cx=lm[13].x*w,cy=((lm[13].y+lm[14].y)/2)*h; // 中央最深
-    const g=x.createRadialGradient(cx,cy,0,cx,cy,R*0.06);
-    g.addColorStop(0,s.color+'cc');g.addColorStop(.55,s.color+'55');g.addColorStop(1,s.color+'00');
-    x.globalAlpha=1;x.fillStyle=g;x.fillRect(0,0,w,h);
-    x.restore();
-    const ph=(performance.now()%1500)/1500,a=.4+.3*Math.sin(ph*6.28);
-    x.save();x.globalCompositeOperation='screen';x.fillStyle='rgba(255,246,238,'+a+')';
-    if(lm[0]){x.beginPath();x.arc(lm[0].x*w,lm[0].y*h,R*0.013,0,7);x.fill();} // 唇珠小C提亮
-    x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.018,0,7);x.fill(); // 下唇中央唇蜜
-    x.restore();
-    return;}
-  if(s.mode==='brow'){x.save();(s.paths||[]).forEach(P=>drawBrowHairs(x,lm,P,s.color,w,h));x.restore();return;}
-  if(s.mode==='blush'){(s.paths||[]).forEach(P=>drawBlush(x,lm,P,s.color,w,h));return;}
-  // sweep mode — 多區各自 sweep + brush
-  x.save();(s.paths||[]).forEach(P=>{sweep(x,lm,P,s.color,w,h);brush(x,lm,P,s.color,w,h);});x.restore();
 }
 
-/* ---- step nav ---- */
-function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / ${STEPS.length}`;
+/* 相機：乾淨自拍，不畫任何記號 */
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camErr(camMsg({name:isInApp()?'InApp':'NS'}));return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
+  catch(e){camErr(camMsg(e));return;}
+  $('video').srcObject=stream;await $('video').play();
+  $('mhint').classList.add('hidden');$('startbtn').classList.add('hidden');
+}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  const v=$('video');if(v)v.srcObject=null;$('mhint').classList.remove('hidden');$('startbtn').classList.remove('hidden');}
+function camMsg(e){const n=(e&&e.name)||'';
+  if(isInApp())return'請用 Safari／Chrome 開：App 內建瀏覽器會擋相機。';
+  if(n==='NotAllowedError'||n==='SecurityError')return'相機權限被擋，請按允許、或到網址列旁鎖頭開啟相機後重整。';
+  if(n==='NotReadableError')return'相機被其他 App 佔用，關掉再試。';
+  if(n==='NotFoundError')return'找不到前鏡頭。';
+  return'開不了相機（'+(e.message||n)+'）。請用 Safari／Chrome + 允許相機。';}
+function camErr(msg){const h=$('mhint');h.classList.remove('hidden');h.innerHTML='⚠️ '+msg;}
+
+/* step nav */
+function renderCard(){const s=STEPS[cur];
+  $('sNum').textContent='STEP '+(cur+1)+' / '+STEPS.length;
   $('sName').textContent=s.ic+' '+s.name;$('sWhere').innerHTML=s.where;$('sSku').textContent=s.sku;
-  $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';}
+  $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';
+  renderHow();}
 function step(d){if(d>0&&cur===STEPS.length-1){finish();return;}cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
-function finish(){stopCam();$('doing').classList.add('hidden');$('done').classList.remove('hidden');}
+function finish(){$('doing').classList.add('hidden');$('done').classList.remove('hidden');}
 renderCard();
-// 一進來就偵測：若在 App 內建瀏覽器，先亮警告條引導用 Safari/Chrome
-(function(){if(isInApp()){var w=$('iabWarn');if(w)w.classList.remove('hidden');}})();
-// feedback form → Formspree（看得到是誰 + 回饋）
+
+/* 回饋 → Formspree */
 (function(){var f=$('fb');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();
   fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
    .then(function(){f.classList.add('hidden');$('fbOk').classList.remove('hidden');})

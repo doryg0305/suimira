@@ -19,18 +19,17 @@
   .glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.7),rgba(255,255,255,0) 65%);opacity:0;transition:opacity 1.4s;}
   .eye{position:absolute;width:26px;height:10px;border-bottom:3px solid #7a5b4d;border-radius:0 0 14px 14px;}
   .eye.l{left:78px;top:150px;} .eye.r{left:178px;top:150px;}
-  .lips{position:absolute;left:50%;top:238px;transform:translateX(-50%);width:46px;height:18px;
-    background:#d98a8a;border-radius:0 0 22px 22px;opacity:.8;}
-  .dab{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;
-    background:rgba(255,252,247,.96);box-shadow:0 0 8px rgba(255,255,255,.7);transform:scale(.3);opacity:0;
-    transition:opacity .35s, transform .6s;}
-  .tool{position:absolute;left:0;top:0;opacity:0;transition:transform .65s ease, opacity .35s;will-change:transform;}
-  .tool .blade{width:34px;height:13px;border-radius:7px;background:linear-gradient(#e8e1d8,#cfc4b6);transform:rotate(35deg);box-shadow:0 1px 3px rgba(0,0,0,.2);}
-  .tool .cream{position:absolute;left:-3px;top:-4px;width:13px;height:13px;border-radius:50%;background:#fffaf2;box-shadow:0 0 6px rgba(255,255,255,.8);}
-  .tool .stick{position:absolute;left:22px;top:8px;width:30px;height:6px;border-radius:4px;background:#cfc4b6;transform:rotate(35deg);transform-origin:left;}
+  .lips{position:absolute;left:50%;top:238px;transform:translateX(-50%);width:46px;height:18px;background:#d98a8a;border-radius:0 0 22px 22px;opacity:.8;}
+  /* 抹開的妝前乳痕跡（一道一道，不是點）*/
+  .smear{position:absolute;height:18px;margin-top:-9px;border-radius:10px;background:rgba(255,252,247,.92);
+    box-shadow:0 0 10px rgba(255,255,255,.6);transform-origin:left center;transform:scaleX(0);opacity:0;
+    transition:opacity .35s, transform .55s ease;}
+  .tool{position:absolute;left:0;top:0;opacity:0;transition:transform .55s ease, opacity .35s;will-change:transform;}
+  .tool .blade{width:36px;height:14px;border-radius:7px;background:linear-gradient(#ece5dc,#cfc4b6);transform:rotate(32deg);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .tool .cream{position:absolute;left:-3px;top:-4px;width:14px;height:14px;border-radius:50%;background:#fffaf2;box-shadow:0 0 6px rgba(255,255,255,.85);}
+  .tool .stick{position:absolute;left:24px;top:9px;width:30px;height:6px;border-radius:4px;background:#cfc4b6;transform:rotate(32deg);transform-origin:left;}
   .sponge{position:absolute;left:0;top:0;opacity:0;transition:transform .42s ease, opacity .35s;will-change:transform;}
-  .sponge .body{width:38px;height:46px;border-radius:50% 50% 50% 50%/62% 62% 40% 40%;
-    background:radial-gradient(circle at 40% 35%,#ffd9dd,#e79aa6);box-shadow:0 3px 8px rgba(180,120,120,.3);}
+  .sponge .body{width:38px;height:46px;border-radius:50% 50% 50% 50%/62% 62% 40% 40%;background:radial-gradient(circle at 40% 35%,#ffd9dd,#e79aa6);box-shadow:0 3px 8px rgba(180,120,120,.3);}
   .drop{position:absolute;width:7px;height:9px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;background:#9ed0e6;}
   .drops{position:absolute;left:0;top:0;opacity:0;transition:opacity .4s;}
   .cap{text-align:center;font-size:15px;font-weight:700;color:var(--rose);min-height:24px;margin-top:6px;}
@@ -42,21 +41,14 @@
 <div class="app">
   <div class="brand">S U I M I R A</div>
   <div class="h">妝前乳 / 底妝 — 怎麼上？</div>
-  <div class="sub">不是抹開，是「點上去 → 拍開」做出服貼透亮</div>
+  <div class="sub">刮刀「抹」開 → 濕海綿「拍」勻</div>
 
   <div class="stagewrap">
     <div class="stage" id="stage">
       <div class="face"><div class="glow" id="glow"></div></div>
       <div class="eye l"></div><div class="eye r"></div><div class="lips"></div>
 
-      <div class="dab" id="d0" style="left:140px;top:78px;"></div>
-      <div class="dab" id="d1" style="left:95px;top:172px;"></div>
-      <div class="dab" id="d2" style="left:185px;top:172px;"></div>
-      <div class="dab" id="d3" style="left:140px;top:150px;"></div>
-      <div class="dab" id="d4" style="left:140px;top:250px;"></div>
-
       <div class="tool" id="tool"><div class="cream"></div><div class="blade"></div><div class="stick"></div></div>
-
       <div class="sponge" id="sponge">
         <div class="drops" id="drops">
           <div class="drop" style="left:-6px;top:-8px;"></div>
@@ -67,60 +59,65 @@
       </div>
     </div>
     <div class="cap" id="cap">① 刮刀挖一點妝前乳</div>
-    <div class="legend">看「手怎麼動」就好 — 真正用時對著鏡子做一樣的動作</div>
+    <div class="legend">看「手怎麼動」就好 — 對著鏡子做一樣的動作</div>
   </div>
 
-  <div class="note">原型動畫 v0 · 妝前乳/底妝的「點→拍開」手法 · Alicia 做，老闆驗呈現對不對</div>
+  <div class="note">原型動畫 v0 · 妝前乳/底妝的「抹開 → 拍勻」手法 · Alicia 做，老闆驗呈現對不對</div>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-const tool=$('tool'),sponge=$('sponge'),glow=$('glow'),cap=$('cap'),drops=$('drops');
-const dabs=[$('d0'),$('d1'),$('d2'),$('d3'),$('d4')];
-const dabPos=[[140,78],[95,172],[185,172],[140,150],[140,250]];
-const CYCLE=10500;
-let timers=[];
+const stage=$('stage'),tool=$('tool'),sponge=$('sponge'),glow=$('glow'),cap=$('cap'),drops=$('drops');
+const RAD=Math.PI/180;
+// 每一道「抹」：起點 + 長度 + 角度（刮刀從起點刷到終點）
+const smears=[
+  {sx:96, sy:80,  len:90, ang:0},    // 額頭 一橫
+  {sx:122,sy:148, len:66, ang:122},  // 左頰 斜下外
+  {sx:158,sy:148, len:66, ang:58},   // 右頰 斜下外
+  {sx:140,sy:126, len:46, ang:90},   // 鼻樑 直下
+  {sx:118,sy:250, len:46, ang:0},    // 下巴 一橫
+];
+smears.forEach(s=>{
+  const d=document.createElement('div');d.className='smear';
+  d.style.left=s.sx+'px';d.style.top=s.sy+'px';d.style.width=s.len+'px';
+  d.style.transform=`rotate(${s.ang}deg) scaleX(0)`;
+  stage.appendChild(d);s.el=d;
+  s.ex=s.sx+s.len*Math.cos(s.ang*RAD); s.ey=s.sy+s.len*Math.sin(s.ang*RAD);
+  s.mx=(s.sx+s.ex)/2; s.my=(s.sy+s.ey)/2;
+});
+const CYCLE=11000; let timers=[];
 function at(ms,fn){timers.push(setTimeout(fn,ms));}
-function toolTo(x,y,op){tool.style.transform=`translate(${x-8}px,${y-30}px) rotate(0deg)`;if(op!=null)tool.style.opacity=op;}
+function toolTo(x,y,op){tool.style.transform=`translate(${x-8}px,${y-30}px)`;if(op!=null)tool.style.opacity=op;}
 function spongeTo(x,y,op){sponge.style.transform=`translate(${x-19}px,${y-22}px)`;if(op!=null)sponge.style.opacity=op;}
-function pat(x,y){spongeTo(x,y,1);
-  at0(220,()=>{sponge.style.transform=`translate(${x-19}px,${y-22}px) scale(.82)`;});
-  at0(360,()=>{sponge.style.transform=`translate(${x-19}px,${y-22}px) scale(1)`;});
-}
-let base=0; function at0(d,fn){at(base+d,fn);} // schedule relative to `base`
 
 function reset(){
-  toolTo(210,-50,0);
-  dabs.forEach(d=>{d.style.opacity=0;d.style.transform='scale(.3)';});
+  toolTo(210,-55,0);
+  smears.forEach(s=>{s.el.style.opacity=0;s.el.style.transform=`rotate(${s.ang}deg) scaleX(0)`;});
   spongeTo(180,360,0); drops.style.opacity=0; glow.style.opacity=0;
   cap.textContent='① 刮刀挖一點妝前乳';
 }
 function cycle(){
   timers.forEach(clearTimeout); timers=[];
   reset();
-  // ① 刮刀進場
-  at(300,()=>toolTo(150,55,1));
-  // ② 點幾下
-  at(1100,()=>cap.textContent='② 在臉上點幾下（額、兩頰、鼻、下巴）');
-  dabPos.forEach((p,k)=>{
-    at(1200+k*430,()=>toolTo(p[0],p[1],1));
-    at(1200+k*430+230,()=>{dabs[k].style.opacity=1;dabs[k].style.transform='scale(1)';});
+  at(300,()=>toolTo(150,55,1));                       // 刮刀進場
+  at(1100,()=>cap.textContent='② 刮刀「抹」開 — 一道一道刷（額、兩頰、鼻、下巴）');
+  smears.forEach((s,k)=>{                              // 一道一道抹
+    const t=1300+k*640;
+    at(t,()=>toolTo(s.sx,s.sy,1));                     // 刮刀到起點
+    at(t+200,()=>{ s.el.style.opacity=.92; s.el.style.transform=`rotate(${s.ang}deg) scaleX(1)`; toolTo(s.ex,s.ey,1); }); // 刷到終點、痕跡長出來
   });
-  // ③ 刮刀出、海綿沾濕進場
-  at(3700,()=>{toolTo(210,-50,0);cap.textContent='③ 海綿沾濕（噴一點 makeup fixer）';});
-  at(4100,()=>{spongeTo(150,250,1);drops.style.opacity=1;});
-  at(4900,()=>{drops.style.opacity=0;cap.textContent='④ 拍 · 拍 · 拍 → 拍開、拍勻';});
-  // ④ 依序拍開每個點
-  const order=[0,3,1,2,4];
-  order.forEach((i,k)=>{
-    base=5000+k*620;
-    const p=dabPos[i];
-    at(base,()=>pat(p[0],p[1]));
-    at(base+320,()=>{dabs[i].style.transform='scale(2.6)';dabs[i].style.opacity=0;
-      glow.style.opacity=Math.min(.6,.13*(k+1));});
+  at(4700,()=>{toolTo(210,-55,0);cap.textContent='③ 海綿沾濕（噴一點 makeup fixer）';}); // 刮刀出
+  at(5100,()=>{spongeTo(150,250,1);drops.style.opacity=1;});
+  at(5800,()=>{drops.style.opacity=0;cap.textContent='④ 拍 · 拍 · 拍 → 把它拍開、拍勻';});
+  smears.forEach((s,k)=>{                              // 海綿沿著抹痕拍勻
+    const t=5900+k*640;
+    at(t,()=>{ spongeTo(s.mx,s.my,1); });
+    at(t+220,()=>{ sponge.style.transform=`translate(${s.mx-19}px,${s.my-22}px) scale(.82)`; }); // 拍下
+    at(t+360,()=>{ sponge.style.transform=`translate(${s.mx-19}px,${s.my-22}px) scale(1)`;
+                   s.el.style.opacity=0; s.el.style.transform=`rotate(${s.ang}deg) scaleX(1.12)`; // 拍開、化進皮膚
+                   glow.style.opacity=Math.min(.6,.13*(k+1)); });
   });
-  // 完成
-  at(9000,()=>{spongeTo(180,360,0);glow.style.opacity=.6;cap.textContent='✨ 均勻服貼、透亮有光！';});
+  at(9300,()=>{spongeTo(180,360,0);glow.style.opacity=.6;cap.textContent='✨ 均勻服貼、透亮有光！';});
   at(CYCLE,cycle);
 }
 cycle();

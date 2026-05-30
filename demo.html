@@ -234,13 +234,7 @@ function brushSweep(x,lm,idx,prog,w,h,color,bs){
   bs=bs||1;
   const P=idx.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
   const R=Math.max(w,h);
-  // ① 圈起來：整條區域用虛線標出來「打這裡」（整個示範窗都在）
-  x.save();x.lineCap='round';x.lineJoin='round';
-  x.globalAlpha=.7;x.strokeStyle=color;x.lineWidth=R*0.009*bs;x.setLineDash([R*0.014,R*0.01]);
-  x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();
-  x.setLineDash([]);x.restore();
-  // ② cursor 沿區域移動：教「怎麼刷」
-  const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,bs);
+  const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,bs); // 區域由 zonePath 永遠標著，這裡只動 cursor
 }
 /* 腮紅：一圈一圈繞蘋果肌 */
 function blushHint(x,lm,idxs,prog,w,h,color){
@@ -299,11 +293,36 @@ function contourHint(x,lm,idx,prog,w,h,color){
   x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();x.setLineDash([]);x.restore();
   const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,1); // 從重(起點)往淺掃
 }
+/* 永遠顯示的「打哪裡」虛線圈（不用等 cursor）*/
+function zonePath(x,lm,idx,w,h){
+  const P=idx.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
+  const R=Math.max(w,h);
+  x.save();x.globalAlpha=.6;x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=R*0.005;x.lineCap='round';
+  x.setLineDash([R*0.013,R*0.01]);x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.stroke();
+  x.setLineDash([]);x.restore();
+}
+function zoneCircle(x,lm,idxs,w,h){
+  const ps=idxs.map(i=>lm[i]).filter(Boolean);if(!ps.length)return;
+  const cx=ps.reduce((a,p)=>a+p.x,0)/ps.length*w, cy=ps.reduce((a,p)=>a+p.y,0)/ps.length*h,R=Math.max(w,h);
+  x.save();x.globalAlpha=.6;x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=R*0.005;x.setLineDash([R*0.013,R*0.01]);
+  x.beginPath();x.arc(cx,cy,R*0.05,0,7);x.stroke();x.setLineDash([]);x.restore();
+}
+function zoneLip(x,lm,w,h){
+  const P=LIP.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<6)return;const R=Math.max(w,h);
+  x.save();x.globalAlpha=.6;x.strokeStyle='rgba(255,255,255,.85)';x.lineWidth=R*0.005;x.setLineDash([R*0.012,R*0.009]);
+  x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.stroke();x.setLineDash([]);x.restore();
+}
 function drawHint(x,lm,w,h){
   const s=STEPS[cur];if(!s.paths)return;
+  const color=s.color||'#ffffff';
+  // ① 永遠：虛線圈出「要打的位置」（不用等 cursor）
+  if(s.mode==='blush'){ s.paths.forEach(p=>zoneCircle(x,lm,p,w,h)); }
+  else if(s.mode==='lip'){ zoneLip(x,lm,w,h); }
+  else { s.paths.forEach(p=>zonePath(x,lm,p,w,h)); }
+  // ② 間歇：cursor + 示範「怎麼打 / 方向」（每 8 秒出現 ~2.3 秒）
   const PERIOD=8000,ON=2300,t=performance.now()%PERIOD;
-  if(t>ON)return;                 // 其餘 ~5.7 秒：乾淨鏡子、看自己
-  const prog=t/ON, color=s.color||'#ffffff';
+  if(t>ON)return;
+  const prog=t/ON;
   if(s.mode==='contour'){ s.paths.forEach(p=>contourHint(x,lm,p,prog,w,h,color)); }
   else if(s.mode==='blush'){ s.paths.forEach(p=>blushHint(x,lm,p,prog,w,h,color)); }
   else if(s.mode==='brow'){ s.paths.forEach(p=>browHint(x,lm,p,prog,w,h,color)); }

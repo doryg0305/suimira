@@ -294,8 +294,8 @@ function drawGuide(x,lm,w,h){
     const O=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
     let P=pts(lm,O,w,h);if(P.length<6)return;
     const cx=P.reduce((a,p)=>a+p.x,0)/P.length, cy=P.reduce((a,p)=>a+p.y,0)/P.length;
-    const SC=1.13, UP=Math.max(w,h)*0.05;
-    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 額頭(上半)再往上推到髮際
+    const SC=1.0, UP=0;
+    P=P.map(p=>({x:cx+(p.x-cx)*SC, y:cy+(p.y-cy)*SC - (p.y<cy?UP:0)})); // 緊貼臉部輪廓、不外擴（跟 face-lab 一致）
     x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();
     x.globalCompositeOperation='soft-light';x.globalAlpha=.18;x.fillStyle='#fff1e4';x.fill();x.restore(); // 淡勻膚、不是面膜
     // 全臉「輕拍」示意：分散全臉的點輪流亮 = 整臉都要（不是一條路徑）

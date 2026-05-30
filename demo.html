@@ -89,7 +89,21 @@
     <div class="sub" id="tSub">戀愛氛圍感 · 暖粉水光</div>
     <div class="hero"><img id="tImg" src="look-linxiang.jpg" alt="target"></div>
     <div class="tcta">
-      <button class="btn" onclick="startTeach()">📸 教我畫成這樣 →</button>
+      <button class="btn" onclick="showPrep()">📸 教我畫成這樣 →</button>
+      <button class="btn ghost" onclick="showWall()">← 換一個 look</button>
+    </div>
+  </div>
+
+  <!-- ===== VIEW 2.5: PREP（保養 checklist，不做 AR，只展示）===== -->
+  <div id="vPrep" class="hidden">
+    <div class="h" style="font-size:19px;">開始上妝前 ☀️</div>
+    <div class="sub">這些保養先整臉拍勻就好 — 整臉都要、不用看位置</div>
+    <div class="card" style="display:flex;gap:12px;align-items:center;"><span style="font-size:22px;">💧</span><div><b>化妝水 Toner</b><div style="font-size:12.5px;color:var(--muted);">整臉輕拍、補水</div></div></div>
+    <div class="card" style="display:flex;gap:12px;align-items:center;"><span style="font-size:22px;">🧴</span><div><b>精華 Serum</b><div style="font-size:12.5px;color:var(--muted);">點全臉、輕壓吸收</div></div></div>
+    <div class="card" style="display:flex;gap:12px;align-items:center;"><span style="font-size:22px;">🌸</span><div><b>乳液 Moisturizer</b><div style="font-size:12.5px;color:var(--muted);">整臉推勻、鎖水</div></div></div>
+    <div class="card" style="display:flex;gap:12px;align-items:center;"><span style="font-size:22px;">☀️</span><div><b>防曬 SPF</b><div style="font-size:12.5px;color:var(--muted);">一定要擦、量要夠、整臉均勻</div></div></div>
+    <div class="tcta">
+      <button class="btn" onclick="startTeach()">都擦好了，開始上妝 →</button>
       <button class="btn ghost" onclick="showWall()">← 換一個 look</button>
     </div>
   </div>
@@ -158,12 +172,8 @@ function camError(e){
 
 /* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
 const STEPS=[
- {key:'toner',ic:'💧',name:'1 · 化妝水 Toner',where:'潔面後，化妝水<b>輕拍全臉</b>補水、二次清潔',sku:'保濕化妝水',mode:'base'},
- {key:'serum',ic:'🧴',name:'2 · 精華 Serum',where:'保濕/亮白精華<b>點全臉、輕壓吸收</b>',sku:'保濕 / 亮白精華',mode:'base'},
- {key:'moist',ic:'🌸',name:'3 · 乳液 Moisturizer',where:'鎖水，<b>由中央往外推勻</b>全臉',sku:'保濕乳液 / 面霜',mode:'base'},
- {key:'spf',ic:'☀️',name:'4 · 防曬 SPF（別忘！）',where:'<b>一定要擦</b>、量要夠（約一枚硬幣），全臉均勻',sku:'SPF50 防曬',mode:'base'},
- {key:'primer',ic:'✨',name:'5 · 妝前乳 Primer',where:'平滑毛孔、抓妝，薄薄<b>由中央往外</b>推一層',sku:'平滑 / 控油妝前乳',mode:'base'},
- {key:'base',ic:'🩷',name:'6 · 底妝 Foundation',where:'從<b>臉中央</b>點開 → <b>往外推勻</b>，乾淨透亮、別整片厚塗',sku:'Dior 超完美柔光粉底',mode:'base'},
+ {key:'primer',ic:'✨',name:'1 · 妝前乳 Primer',where:'平滑毛孔、抓妝，薄薄<b>由中央往外</b>推一層',sku:'平滑 / 控油妝前乳',mode:'base'},
+ {key:'base',ic:'🩷',name:'2 · 底妝 Foundation',where:'從<b>臉中央</b>點開 → <b>往外推勻</b>，乾淨透亮、別整片厚塗',sku:'Dior 超完美柔光粉底',mode:'base'},
  {key:'contour',ic:'🤎',name:'修容 (shadow)',where:'打<b>顴骨下的凹陷</b>：從耳朵<b>斜掃向嘴角方向</b>、停在中臉（不是打臉頰正面）。另外髮際框臉 + 下顎線。咖啡棕、暈開',sku:'咖啡棕修容',mode:'sweep',
    paths:[[234,117,205,187],[454,346,425,411],[172,136,150,149],[397,365,379,378]],color:'#9c7256'},
  {key:'highlight',ic:'✨',name:'打亮',where:'沿<b>臉中線</b>提亮：鼻樑、額中、唇珠、下巴 + 眼下（<b>靠近中央</b>才把五官立出來，不是打顴骨外側）',sku:'OFRA Highlighter Cloud9',mode:'sweep',
@@ -180,8 +190,9 @@ const STEPS=[
 ];
 
 /* ---- views ---- */
-function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vTeach').classList.add('hidden');}
-function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vTeach').classList.add('hidden');}
+function showWall(){stopCam();$('vWall').classList.remove('hidden');$('vTarget').classList.add('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.add('hidden');}
+function openLook(k){$('vWall').classList.add('hidden');$('vTarget').classList.remove('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.add('hidden');}
+function showPrep(){$('vTarget').classList.add('hidden');$('vPrep').classList.remove('hidden');}
 function stopTeach(){showWall();}
 
 /* ---- MediaPipe ---- */
@@ -196,7 +207,7 @@ async function initModel(){
 function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
 
 async function startTeach(){
-  $('vTarget').classList.add('hidden');$('vTeach').classList.remove('hidden');
+  $('vTarget').classList.add('hidden');$('vPrep').classList.add('hidden');$('vTeach').classList.remove('hidden');
   cur=0;renderCard();$('doing').classList.remove('hidden');$('done').classList.add('hidden');
   try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camError({name:isInApp()?'InApp':'Unsupported',message:'此瀏覽器不支援相機'});return;}

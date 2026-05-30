@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 一步原型（鏡子 / 怎麼做 切換）</title>
+<style>
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;--line:#ecdfd4;--card:#fff;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;padding:0 16px 40px;}
+  .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
+  .step{text-align:center;font-size:20px;font-weight:700;margin:2px 0 2px;}
+  .stepsub{text-align:center;font-size:12.5px;color:var(--muted);margin-bottom:12px;}
+  /* 分頁切換 */
+  .tabs{display:flex;background:#f1e7dd;border-radius:14px;padding:4px;gap:4px;margin-bottom:12px;}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:10px;font-size:14.5px;font-weight:700;color:var(--muted);cursor:pointer;border:none;background:transparent;}
+  .tab.on{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(190,120,120,.12);}
+  /* 鏡子 */
+  .mirror{position:relative;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+  .mirror video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1);}
+  .mhint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:14px;padding:0 30px;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  .startbtn{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);border:none;border-radius:24px;padding:13px 26px;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.4);cursor:pointer;}
+  .clean{text-align:center;font-size:12.5px;color:var(--muted);margin-top:8px;}
+  /* 怎麼做 */
+  .howwrap{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;}
+  .howwrap iframe{width:100%;height:560px;border:0;display:block;}
+  .hidden{display:none!important;}
+  .iab{margin:0 0 10px;background:#fff4e5;border:1px solid #f3d9a8;border-radius:14px;padding:12px 14px;font-size:13px;color:#8a5a1a;}
+  .nav{display:flex;gap:10px;margin-top:14px;}
+  .nav button{flex:1;border:1px solid var(--line);background:#fff;border-radius:13px;padding:13px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;}
+  .nav button.primary{border:none;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));}
+  .note{font-size:11px;color:var(--muted);text-align:center;padding:14px 20px 0;opacity:.85;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">S U I M I R A</div>
+  <div class="step">✨ 妝前乳 Primer</div>
+  <div class="stepsub">看著自己上 · 想看手法就切「怎麼做」</div>
+
+  <div id="iab" class="iab hidden">⚠️ 你好像在 App（IG／LINE／FB）裡開的，相機會被擋。請用 <b>Safari／Chrome</b> 開。</div>
+
+  <div class="tabs">
+    <button class="tab on" id="tabM" onclick="showTab('m')">🪞 鏡子（看自己）</button>
+    <button class="tab" id="tabH" onclick="showTab('h')">📋 怎麼做</button>
+  </div>
+
+  <!-- 鏡子分頁：乾淨自拍，不糊任何記號 -->
+  <div id="viewM">
+    <div class="mirror">
+      <video id="video" playsinline muted></video>
+      <div class="mhint" id="mhint">這是你的鏡子 — 乾淨、看得到自己<br>跟著「怎麼做」示範一起上妝</div>
+      <button class="startbtn" id="startbtn" onclick="startCam()">📸 開鏡子</button>
+    </div>
+    <div class="clean">鏡子只給你看自己，手法在「📋 怎麼做」分頁 🤍</div>
+  </div>
+
+  <!-- 怎麼做分頁：示意動畫（不疊在你臉上）-->
+  <div id="viewH" class="hidden">
+    <div class="howwrap"><iframe id="howFrame" title="手法示範"></iframe></div>
+  </div>
+
+  <div class="nav">
+    <button onclick="alert('上一步（原型佔位）')">‹ 上一步</button>
+    <button class="primary" onclick="alert('下一步：底妝 Foundation（原型佔位）')">下一步 ›</button>
+  </div>
+
+  <div class="note">單步原型 · 「鏡子 / 怎麼做」切換 · 鏡子乾淨看自己、手法在示範分頁不疊真臉 · Alicia 做</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let stream=null,frameLoaded=false;
+function isInApp(){return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Messenger|MicroMessenger|Twitter|TikTok/i.test(navigator.userAgent||'');}
+if(isInApp())$('iab').classList.remove('hidden');
+
+function showTab(t){
+  const m=t==='m';
+  $('viewM').classList.toggle('hidden',!m);
+  $('viewH').classList.toggle('hidden',m);
+  $('tabM').classList.toggle('on',m);
+  $('tabH').classList.toggle('on',!m);
+  if(!m && !frameLoaded){$('howFrame').src='./primer-anim.html';frameLoaded=true;} // 切過去才載入動畫
+}
+async function startCam(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camErr('此瀏覽器不支援相機');return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
+  catch(e){camErr(camMsg(e));return;}
+  $('video').srcObject=stream;await $('video').play();
+  $('mhint').classList.add('hidden');$('startbtn').classList.add('hidden');
+}
+function camMsg(e){const n=(e&&e.name)||'';
+  if(isInApp())return'請用 Safari／Chrome 開：App 內建瀏覽器會擋相機。';
+  if(n==='NotAllowedError'||n==='SecurityError')return'相機權限被擋，請按允許或到設定開啟後重整。';
+  if(n==='NotReadableError')return'相機被其他 App 佔用，關掉再試。';
+  return'開不了相機（'+(e.message||n)+'）。請用 Safari／Chrome + 允許相機。';}
+function camErr(msg){$('mhint').classList.remove('hidden');$('mhint').innerHTML='⚠️ '+msg;}
+</script>
+</body>
+</html>

@@ -69,6 +69,8 @@
 
   <button id="redBtn" onclick="toggleRed()" style="width:calc(100% - 32px);margin:0 16px 8px;border:1.5px solid #4caf7d;background:#fff;color:#3a8f64;border-radius:15px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">🔍 我想看我有沒有泛紅</button>
 
+  <button id="tBtn" onclick="toggleT()" style="width:calc(100% - 32px);margin:0 16px 8px;border:1.5px solid #5b9bd5;background:#fff;color:#3a6e9c;border-radius:15px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">💧 我容易出油，看 T 字打哪</button>
+
   <button class="btn" id="nextBtn" onclick="location.href='./quiz.html'">下一步：選你的 primer 💗 →</button>
 
   <div class="note">POC v0 · 泛紅是用「臉頰 vs 額頭基準」的相對色差判斷（會受光線影響，unverified）。位置圈選是固定臉部結構。<br>Alicia 草擬，老闆驗效果。</div>
@@ -156,6 +158,8 @@ let FILTER='all';
 function setFilter(f){FILTER=f;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));}
 let showRed=false;
 function toggleRed(){showRed=!showRed;const b=$('redBtn');if(b)b.textContent=showRed?'🙈 不看泛紅了，全臉紫就好':'🔍 我想看我有沒有泛紅';lastReport='';}
+let showT=false;
+function toggleT(){showT=!showT;const b=$('tBtn');if(b)b.textContent=showT?'🙈 不看 T 字了':'💧 我容易出油，看 T 字打哪';lastReport='';}
 function patch(x,cx,cy,r,color,a){x.save();const g=x.createRadialGradient(cx,cy,0,cx,cy,r);
   g.addColorStop(0,color+a);g.addColorStop(.7,color+Math.round(parseInt(a,16)*0.4).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
   x.fillStyle=g;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.restore();}
@@ -195,8 +199,14 @@ function analyze(x,lm,W,H,data){
   } else {
     rows.push({c:'#4caf7d',t:'🟢 想知道自己哪裡泛紅嗎？',s:'按下面「<b>我想看我有沒有泛紅</b>」就圈給你看；不想看、直接全臉紫也完全可以 🤍'});
   }
-  // ---- 🔵 T 字控油 = 條件式建議（會出油/混合肌才用，文字為主，不畫臉）----
-  rows.push({c:'#5b9bd5',t:'🔵 如果你容易出油',s:'混合肌 / T 字（額頭+鼻）愛出油的話，那裡加一點<b>控油 primer</b> 會更持妝；不會出油就不用 🙂'});
+  // ---- 🔵 T 字控油 = 藏在按鈕後面：按「我容易出油」才把 T 形圈出來 ----
+  if(showT){
+    glowLine(x,lm,[54,103,67,109,10,338,297,332,284],'#5b9bd5',W,H,0.032); // 額頭一橫
+    glowLine(x,lm,[168,6,197,195,5,4],'#5b9bd5',W,H,0.028);                // 鼻樑一豎
+    rows.push({c:'#5b9bd5',t:'🔵 這就是 T 字（額頭+鼻）',s:'圈起來的地方 → 容易出油就點一點<b>控油 primer</b>，持妝更久；不出油不用 🙂'});
+  } else {
+    rows.push({c:'#5b9bd5',t:'🔵 容易出油 / 混合肌？',s:'按下面「<b>我容易出油，看 T 字打哪</b>」就圈出 T 字位置；不出油直接跳過 🙂'});
+  }
   // 打亮 / 修容是上妝後的步驟，交給後面的 demo 教（不在 primer 這層）
 
   const html=rows.map(r=>`<div class="row"><span class="dot" style="background:${r.c}"></span><div><b>${r.t}</b><small>${r.s}</small></div></div>`).join('');

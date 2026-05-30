@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 妝前戀愛遊戲（選你的 primer）</title>
+<style>
+  :root{--bg:#fbf0ee;--bg2:#f6e3e6;--ink:#3a2a28;--muted:#9a8278;--rose:#e08a96;--gold:#d3a878;
+    --line:#f0ddd6;--card:#fff;--mira:#caa0d8;}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100vh;background:linear-gradient(160deg,var(--bg),var(--bg2));
+    color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.55;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+  .brand{text-align:center;font-size:11px;letter-spacing:.34em;color:var(--gold);font-weight:700;padding:16px 0 4px;}
+  .scene{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px 8px;}
+  .dots{display:flex;gap:6px;justify-content:center;padding:4px 0 14px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:.3s;}
+  .dot.on{background:var(--rose);transform:scale(1.25);}
+  .mira{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px;}
+  .avatar{flex:none;width:52px;height:52px;border-radius:50%;
+    background:radial-gradient(circle at 50% 38%,#fff 0 38%,var(--mira) 39% 100%);
+    box-shadow:0 4px 14px rgba(180,130,200,.35);position:relative;}
+  .avatar:after{content:"◡ ◡";position:absolute;top:17px;left:0;right:0;text-align:center;font-size:12px;color:#7a5a86;letter-spacing:3px;}
+  .mname{font-size:11px;color:var(--mira);font-weight:700;margin:0 0 3px 2px;letter-spacing:.05em;}
+  .bubble{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 18px 4px;
+    padding:14px 16px;font-size:15.5px;box-shadow:0 6px 20px rgba(190,120,120,.12);min-height:56px;}
+  .bubble b{color:var(--rose);}
+  .choices{display:flex;flex-direction:column;gap:9px;margin:14px 2px 18px;}
+  .choice{background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;
+    font-size:14.5px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer;
+    box-shadow:0 3px 10px rgba(190,120,120,.07);transition:.15s;display:flex;align-items:center;gap:10px;}
+  .choice:active{transform:scale(.98);} .choice:hover{border-color:var(--rose);}
+  .choice .em{font-size:18px;flex:none;}
+  .result{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px;
+    box-shadow:0 8px 26px rgba(190,120,120,.16);text-align:center;margin-bottom:14px;}
+  .result .pill{display:inline-block;font-size:11px;letter-spacing:.1em;color:var(--gold);font-weight:700;margin-bottom:8px;}
+  .result .swatch{width:64px;height:64px;border-radius:50%;margin:4px auto 12px;box-shadow:0 4px 14px rgba(0,0,0,.12);border:3px solid #fff;}
+  .result h2{font-size:21px;margin:0 0 4px;font-family:"Cormorant Garamond",Georgia,serif;}
+  .result .why{font-size:14px;color:var(--muted);margin:8px 4px 0;}
+  .result .tag{display:inline-block;margin-top:12px;font-size:12px;background:#f6ece4;border:1px solid var(--line);
+    border-radius:20px;padding:4px 12px;color:#7a5a3a;font-weight:600;}
+  .btn{width:100%;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;margin-bottom:10px;}
+  .btn.ghost{background:transparent;color:var(--muted);box-shadow:none;font-weight:600;font-size:13px;padding:8px;}
+  .footer{padding:0 16px 22px;}
+  .fadein{animation:f .4s ease;} @keyframes f{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  .note{font-size:11px;color:var(--muted);text-align:center;padding:6px 24px 14px;opacity:.8;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">S U I M I R A</div>
+  <div class="dots" id="dots"></div>
+  <div class="scene" id="scene"></div>
+  <div class="footer" id="footer"></div>
+  <div class="note">原型 · 戀愛遊戲式選 primer。內容是 Alicia 草擬的標準美妝邏輯,老闆可改</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const TREE={
+  start:{step:0,say:'嗨～我是 <b>Mira</b> ✨ 開始上妝前,先讓我懂你今天想要的感覺。<br><br>今天想畫成什麼樣子呀？',
+    choices:[
+      {em:'🤍',label:'想白透亮一點、有發光感',to:'bright'},
+      {em:'🌿',label:'自然就好,像沒化妝',to:'r_hydra'},
+      {em:'🍃',label:'想遮泛紅 / 痘印',to:'r_green'},
+      {em:'💧',label:'超容易出油,想持久不脫妝',to:'r_matte'},
+    ]},
+  bright:{step:1,say:'想要那種<b>透亮發光</b>的感覺～<br>你平常的膚色比較偏哪一種呢？',
+    choices:[
+      {em:'🍯',label:'偏暗黃、氣色有點悶',to:'r_purple'},
+      {em:'🩶',label:'偏暗沉、看起來有點灰',to:'r_pink'},
+    ]},
+  r_purple:{result:{pill:'你的 PRIMER',swatch:'#b89cd9',name:'紫色校色妝前乳',
+    why:'紫色（薰衣草）中和暗黃、把悶悶的氣色提亮 → 上完底妝瞬間透白一階。',tag:'薰衣草 / Lavender'}},
+  r_pink:{result:{pill:'你的 PRIMER',swatch:'#f0a9b8',name:'粉色提亮妝前乳',
+    why:'粉色幫灰暗膚色補回血色、提亮氣色 → 像睡飽的好氣色透亮。',tag:'蜜桃粉 / Pink'}},
+  r_hydra:{result:{pill:'你的 PRIMER',swatch:'#f6d9bf',name:'保濕水光妝前乳',
+    why:'自然妝最怕乾、卡粉。保濕款讓妝服貼、帶自然光澤,像養好的素顏感。',tag:'水光 / Hydrating'}},
+  r_matte:{result:{pill:'你的 PRIMER',swatch:'#cdd6c9',name:'控油霧面妝前乳',
+    why:'控油款抓住油光、平滑毛孔 → 妝撐整天、T 字不泛油光。',tag:'控油霧面 / Matte'}},
+  r_green:{result:{pill:'你的 PRIMER',swatch:'#a8cf9e',name:'綠色校色妝前乳',
+    why:'綠色是紅的對比色,專門中和泛紅、痘痘紅、痘印 → 不用厚塗就乾淨。',tag:'校色綠 / Green'}},
+};
+function renderDots(a){$('dots').innerHTML='';for(let i=0;i<3;i++){const d=document.createElement('div');d.className='dot'+(i<=a?' on':'');$('dots').appendChild(d);}}
+function go(key){const n=TREE[key];if(n.result){renderResult(n.result);return;}
+  renderDots(n.step);
+  $('scene').innerHTML=`<div class="mira fadein"><div class="avatar"></div><div style="flex:1">
+    <div class="mname">Mira</div><div class="bubble">${n.say}</div></div></div>
+    <div class="choices">${n.choices.map((c,i)=>`<button class="choice fadein" style="animation-delay:${0.05*i}s" onclick="go('${c.to}')"><span class="em">${c.em}</span>${c.label}</button>`).join('')}</div>`;
+  $('footer').innerHTML='';}
+function renderResult(r){renderDots(2);
+  $('scene').innerHTML=`<div class="result fadein"><div class="pill">${r.pill}</div>
+    <div class="swatch" style="background:${r.swatch}"></div><h2>${r.name}</h2>
+    <div class="why">${r.why}</div><div class="tag">${r.tag}</div></div>`;
+  $('footer').innerHTML=`<button class="btn" onclick="location.href='./demo.html'">好,教我怎麼畫 →</button>
+    <button class="btn ghost" onclick="go('start')">← 重玩一次</button>`;}
+go('start');
+</script>
+</body>
+</html>

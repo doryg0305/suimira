@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 想怎麼開始？</title>
+<style>
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
+    --line:#ecdfd4;--card:#fff;--mira:#caa0d8;}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px 18px 40px;}
+  .brand{text-align:center;font-size:12px;letter-spacing:.34em;color:var(--gold);font-weight:700;margin-bottom:6px;}
+  .h{font-size:24px;font-weight:600;text-align:center;margin:2px 0;font-family:"Cormorant Garamond",Georgia,serif;}
+  .sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:24px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 20px;margin-bottom:14px;
+    cursor:pointer;box-shadow:0 6px 20px rgba(190,120,120,.10);transition:.15s;display:flex;gap:14px;align-items:flex-start;}
+  .card:active{transform:scale(.98);}
+  .card:hover{border-color:var(--rose);}
+  .ic{flex:none;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .a .ic{background:#f3ecf7;}
+  .b .ic{background:#f6ece4;}
+  .card h2{margin:0 0 4px;font-size:17px;}
+  .card p{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .card .go{margin-top:8px;font-size:13px;font-weight:700;color:var(--rose);}
+  .foot{text-align:center;font-size:11px;color:var(--muted);margin-top:10px;opacity:.85;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">S U I M I R A</div>
+  <div class="h">想怎麼開始？</div>
+  <div class="sub">兩種都可以，看你今天的心情 🤍</div>
+
+  <div class="card a" onclick="location.href='./face-lab.html'">
+    <div class="ic">🪞</div>
+    <div>
+      <h2>幫我看看、推薦適合我的</h2>
+      <p>還不確定用什麼？讓 Suimira 看你的臉，告訴你哪裡適合放什麼、推薦你的妝前產品。</p>
+      <div class="go">看臉 → 推薦 → 教我畫 →</div>
+    </div>
+  </div>
+
+  <div class="card b" onclick="location.href='./demo.html'">
+    <div class="ic">🎯</div>
+    <div>
+      <h2>我知道我想要的，直接教我畫</h2>
+      <p>已經有想法了？跳過分析，直接挑一個 look，我一步步教你畫成那樣。</p>
+      <div class="go">挑 look → 教我畫 →</div>
+    </div>
+  </div>
+
+  <div class="foot">你隨時可以換 — 不會被推著走</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 臉部分析 POC（泛紅 + 位置圈選）</title>
+<style>
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;
+    --line:#ecdfd4;--card:#fff;--green:#4caf7d;--purple:#a884d4;--blue:#5b9bd5;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .app{max-width:440px;margin:0 auto;min-height:100vh;}
+  .brand{text-align:center;font-size:12px;letter-spacing:.32em;color:var(--gold);font-weight:700;padding:16px 0 2px;}
+  .h{font-size:20px;font-weight:600;text-align:center;margin:2px 16px;}
+  .sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;}
+  .stage{position:relative;margin:0 16px;border-radius:18px;overflow:hidden;background:#000;aspect-ratio:3/4;}
+  .stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .stage video{transform:scaleX(-1);}
+  .hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    text-align:center;color:#fff;font-size:13px;padding:0 28px;z-index:2;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 16px 4px;font-size:11px;}
+  .lg{display:flex;align-items:center;gap:5px;color:var(--muted);}
+  .sw{width:11px;height:11px;border-radius:50%;display:inline-block;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;font-size:13.5px;}
+  .card h3{margin:0 0 8px;font-size:14px;}
+  .row{display:flex;align-items:flex-start;gap:9px;margin:7px 0;}
+  .row .dot{flex:none;width:10px;height:10px;border-radius:50%;margin-top:5px;}
+  .row b{font-weight:700;}
+  .row small{color:var(--muted);display:block;font-size:12px;}
+  .btn{width:calc(100% - 32px);margin:6px 16px 8px;border:none;border-radius:15px;padding:15px;font-size:16px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--rose),var(--gold));box-shadow:0 6px 16px rgba(200,130,120,.3);cursor:pointer;}
+  .status{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:4px 16px;}
+  .spin{display:inline-block;width:11px;height:11px;border:2px solid var(--line);border-top-color:var(--rose);border-radius:50%;animation:s .8s linear infinite;margin-right:6px;vertical-align:-1px;}
+  @keyframes s{to{transform:rotate(360deg)}}
+  .iab{margin:6px 16px;background:#fff4e5;border:1px solid #f3d9a8;border-radius:14px;padding:12px 14px;font-size:13px;color:#8a5a1a;}
+  .hidden{display:none!important;}
+  .note{font-size:11px;color:var(--muted);text-align:center;padding:8px 24px 20px;opacity:.85;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">S U I M I R A · LAB</div>
+  <div class="h">看著你的臉，告訴你哪裡該放什麼</div>
+  <div class="sub">泛紅 → 綠色校色 · 提亮位 → 打亮/紫 · T 字 → 控油（POC）</div>
+
+  <div id="iab" class="iab hidden">⚠️ 你好像在 App（IG／LINE／FB）裡開的，相機會被擋。請用 <b>Safari／Chrome</b> 開 <code>suimira.com/face-lab.html</code>。</div>
+
+  <div class="stage">
+    <video id="video" playsinline muted></video>
+    <canvas id="cv"></canvas>
+    <div class="hint" id="hint">按下面開始 → 打開前鏡頭，把臉擺正、光線充足</div>
+  </div>
+  <div class="status" id="status"></div>
+
+  <div class="legend">
+    <span class="lg"><span class="sw" style="background:#4caf7d"></span>泛紅 → 綠色 primer</span>
+    <span class="lg"><span class="sw" style="background:#a884d4"></span>提亮 → 打亮/紫</span>
+    <span class="lg"><span class="sw" style="background:#5b9bd5"></span>T 字 → 控油</span>
+  </div>
+
+  <button class="btn" id="go" onclick="start()">📸 開始分析我的臉</button>
+
+  <div class="card" id="report">
+    <h3>分析結果</h3>
+    <div id="rows"><div class="row"><small>開相機後，這裡會即時列出在你臉上偵測到什麼。</small></div></div>
+  </div>
+
+  <div class="note">POC v0 · 泛紅是用「臉頰 vs 額頭基準」的相對色差判斷（會受光線影響，unverified）。位置圈選是固定臉部結構。<br>Alicia 草擬，老闆驗效果。</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,lastReport='';
+
+/* ---- 相機環境 + 友善錯誤 ---- */
+function isInApp(){return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Messenger|MicroMessenger|Twitter|TikTok/i.test(navigator.userAgent||'');}
+function setStatus(t,b){$('status').innerHTML=b?`<span class="spin"></span>${t}`:t;}
+function camError(e){
+  const n=(e&&e.name)||'';let msg;
+  if(isInApp()) msg='請改用 Safari／Chrome 開：App 內建瀏覽器會擋相機。';
+  else if(n==='NotAllowedError'||n==='SecurityError') msg='相機權限被擋，請按「允許」或到設定開啟後重整。';
+  else if(n==='NotFoundError') msg='找不到前鏡頭。';
+  else if(n==='NotReadableError') msg='相機被其他 App 佔用，關掉再試。';
+  else msg='開不了相機（'+(e.message||n)+'）。請用 Safari／Chrome + 允許相機。';
+  setStatus('⚠️ '+msg);$('hint').classList.remove('hidden');$('hint').innerHTML='⚠️ '+msg;
+}
+
+async function initModel(){
+  if(landmarker)return landmarker;
+  setStatus('載入 AI 模型中…（第一次幾秒）',true);
+  if(!FaceLandmarker){const m=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12");FaceLandmarker=m.FaceLandmarker;FilesetResolver=m.FilesetResolver;}
+  const fs=await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm");
+  landmarker=await FaceLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",delegate:"GPU"},runningMode:"VIDEO",numFaces:1});
+  setStatus('');return landmarker;
+}
+
+async function start(){
+  $('go').textContent='分析中… 把臉擺正';
+  try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camError({name:isInApp()?'InApp':'NS'});return;}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
+  catch(e){camError(e);return;}
+  $('video').srcObject=stream;await $('video').play();
+  $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 對著你臉即時分析 ✨');
+  loop();
+}
+
+/* ---- 顏色採樣（offscreen，未翻轉）---- */
+const off=document.createElement('canvas');const ox=off.getContext('2d',{willReadFrequently:true});
+function sampleColor(data,W,H,lm,idxs,rad){
+  rad=rad||Math.round(Math.max(W,H)*0.012);let R=0,G=0,B=0,n=0;
+  idxs.forEach(i=>{const p=lm[i];if(!p)return;const cx=Math.round(p.x*W),cy=Math.round(p.y*H);
+    for(let dy=-rad;dy<=rad;dy++)for(let dx=-rad;dx<=rad;dx++){const xx=cx+dx,yy=cy+dy;
+      if(xx<0||yy<0||xx>=W||yy>=H)continue;const o=(yy*W+xx)*4;R+=data[o];G+=data[o+1];B+=data[o+2];n++;}});
+  return n?{r:R/n,g:G/n,b:B/n}:null;
+}
+const redness=c=>c?c.r-(c.g+c.b)/2:0;
+
+/* 區域 landmark */
+const Z={
+  cheekL:[50,205,123,116], cheekR:[280,425,352,345],
+  fore:[10,151,9,108,337], chin:[152,175,148,377],
+  nose:[1,4,5,195,98,327], // T 字下半 + 鼻翼
+  tzone:[168,6,197,195,5], // 鼻樑中線（提亮）
+  hiForehead:[10,151], cupid:[0,37,267], cheekHiL:[117,118], cheekHiR:[346,347]
+};
+function centroid(lm,idxs,W,H){let x=0,y=0,n=0;idxs.forEach(i=>{const p=lm[i];if(p){x+=p.x;y+=p.y;n++;}});return n?{x:x/n*W,y:y/n*H}:null;}
+
+function loop(){
+  if(!stream){return;}
+  const v=$('video'),c=$('cv'),x=c.getContext('2d');
+  const W=v.videoWidth,H=v.videoHeight;
+  if(W){
+    c.width=W;c.height=H;off.width=W;off.height=H;
+    ox.drawImage(v,0,0,W,H); // 未翻轉，用於取色
+    let data;try{data=ox.getImageData(0,0,W,H).data;}catch(e){data=null;}
+    x.clearRect(0,0,W,H);
+    const r=landmarker.detectForVideo(v,performance.now());
+    if(r.faceLandmarks&&r.faceLandmarks.length){
+      const lm=r.faceLandmarks[0];
+      analyze(x,lm,W,H,data);
+    }
+  }
+  rafId=requestAnimationFrame(loop);
+}
+
+/* 主 canvas 鏡像對齊：video 用 CSS scaleX(-1)，canvas 沒翻 → x 用 (1-px)*W；文字正常不鏡像 */
+function MX(px,W){return (1-px)*W;}
+function circle(x,cx,cy,r,color){x.save();x.strokeStyle=color;x.lineWidth=Math.max(2,r*0.10);
+  x.setLineDash([r*0.5,r*0.35]);x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();x.restore();}
+function label(x,cx,cy,text,color,W){
+  x.save();x.font='600 '+Math.round(W*0.032)+'px -apple-system,sans-serif';
+  const pad=W*0.012,tw=x.measureText(text).width,h=W*0.05;
+  let lx=cx-tw/2-pad,ly=cy-h-W*0.01;
+  lx=Math.max(4,Math.min(W-tw-2*pad-4,lx));ly=Math.max(h+4,ly);
+  x.fillStyle=color;x.globalAlpha=.92;x.beginPath();
+  if(x.roundRect)x.roundRect(lx,ly,tw+2*pad,h,h*0.3);else x.rect(lx,ly,tw+2*pad,h);
+  x.fill();x.globalAlpha=1;x.fillStyle='#fff';x.textBaseline='middle';
+  x.fillText(text,lx+pad,ly+h/2);x.restore();
+}
+
+function analyze(x,lm,W,H,data){
+  const R=Math.max(W,H);const rows=[];
+  // ---- 泛紅：臉頰 vs 額頭基準 ----
+  let redFlag=false;
+  if(data){
+    const base=redness(sampleColor(data,W,H,lm,Z.fore));
+    const cl=redness(sampleColor(data,W,H,lm,Z.cheekL)),cr=redness(sampleColor(data,W,H,lm,Z.cheekR));
+    const nz=redness(sampleColor(data,W,H,lm,Z.nose));
+    const TH=8; // 相對閾值（會受光線影響）
+    [['cheekL',cl,Z.cheekL],['cheekR',cr,Z.cheekR],['nose',nz,Z.nose]].forEach(([k,val,idx])=>{
+      if(val-base>TH){redFlag=true;const ct=centroid(lm,idx,W,H);
+        if(ct){const cx=MX(ct.x/W,W),cy=ct.y;circle(x,cx,cy,R*0.072,'#4caf7d');label(x,cx,cy,'泛紅 → 綠色',' #4caf7d'.trim(),W);}}
+    });
+    rows.push(redFlag
+      ?{c:'#4caf7d',t:'偵測到泛紅區',s:'臉頰/鼻翼比額頭紅 → 上底妝前局部點<b>綠色校色 primer</b>中和'}
+      :{c:'#4caf7d',t:'泛紅不明顯',s:'目前沒看到明顯泛紅，可跳過綠色校色'});
+  }
+  // ---- 提亮位（固定臉部結構）----
+  [['hiForehead',Z.hiForehead],['cupid',Z.cupid],['cheekHiL',Z.cheekHiL],['cheekHiR',Z.cheekHiR],['tzone',[6,197]]].forEach(([k,idx])=>{
+    const ct=centroid(lm,idx,W,H);if(ct){const cx=MX(ct.x/W,W),cy=ct.y;circle(x,cx,cy,R*0.045,'#a884d4');}
+  });
+  // 鼻樑中線提亮標一個總標籤
+  const nt=centroid(lm,Z.tzone,W,H);if(nt)label(x,MX(nt.x/W,W),nt.y,'提亮 → 打亮',' #a884d4'.trim(),W);
+  rows.push({c:'#a884d4',t:'提亮位',s:'鼻樑、額中、唇珠、顴骨高點 → <b>打亮</b>或想透白用<b>紫色 primer</b>'});
+  // ---- T 字控油 ----
+  const tt=centroid(lm,Z.nose,W,H);if(tt){const cx=MX(tt.x/W,W),cy=tt.y;circle(x,cx,cy,R*0.05,'#5b9bd5');label(x,cx,cy+R*0.09,'T 字 → 控油',' #5b9bd5'.trim(),W);}
+  rows.push({c:'#5b9bd5',t:'T 字（鼻翼/鼻頭）',s:'最易出油脫妝 → <b>控油 primer</b>局部打底、持妝更久'});
+
+  // render report (節流：內容變了才更新 DOM)
+  const html=rows.map(r=>`<div class="row"><span class="dot" style="background:${r.c}"></span><div><b>${r.t}</b><small>${r.s}</small></div></div>`).join('');
+  if(html!==lastReport){lastReport=html;$('rows').innerHTML=html;}
+}
+
+(function(){if(isInApp()){$('iab').classList.remove('hidden');}})();
+</script>
+<script data-goatcounter="https://suimira.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

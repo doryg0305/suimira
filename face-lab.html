@@ -22,6 +22,9 @@
   .legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 16px 4px;font-size:11px;}
   .lg{display:flex;align-items:center;gap:5px;color:var(--muted);}
   .sw{width:11px;height:11px;border-radius:50%;display:inline-block;}
+  .chips{display:flex;gap:8px;justify-content:center;padding:8px 16px 2px;flex-wrap:wrap;}
+  .chip{font-size:12.5px;padding:7px 15px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--muted);font-weight:700;cursor:pointer;}
+  .chip.on{background:linear-gradient(135deg,var(--rose),var(--gold));color:#fff;border:none;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 16px;padding:14px 16px;font-size:13.5px;}
   .card h3{margin:0 0 8px;font-size:14px;}
   .row{display:flex;align-items:flex-start;gap:9px;margin:7px 0;}
@@ -57,6 +60,13 @@
     <span class="lg"><span class="sw" style="background:#4caf7d"></span>泛紅 → 綠色 primer</span>
     <span class="lg"><span class="sw" style="background:#a884d4"></span>提亮 → 打亮/紫</span>
     <span class="lg"><span class="sw" style="background:#5b9bd5"></span>T 字 → 控油</span>
+  </div>
+
+  <div class="chips" id="chips">
+    <button class="chip on" data-f="all" onclick="setFilter('all')">全部</button>
+    <button class="chip" data-f="red" onclick="setFilter('red')">泛紅</button>
+    <button class="chip" data-f="hi" onclick="setFilter('hi')">提亮</button>
+    <button class="chip" data-f="t" onclick="setFilter('t')">T 字</button>
   </div>
 
   <button class="btn" id="go" onclick="start()">📸 開始分析我的臉</button>
@@ -145,50 +155,42 @@ function loop(){
   rafId=requestAnimationFrame(loop);
 }
 
-/* 主 canvas 鏡像對齊：video 用 CSS scaleX(-1)，canvas 沒翻 → x 用 (1-px)*W；文字正常不鏡像 */
+/* 主 canvas 鏡像對齊：video 用 CSS scaleX(-1)，canvas 沒翻 → x 用 (1-px)*W */
 function MX(px,W){return (1-px)*W;}
-function circle(x,cx,cy,r,color){x.save();x.strokeStyle=color;x.lineWidth=Math.max(2,r*0.10);
-  x.setLineDash([r*0.5,r*0.35]);x.beginPath();x.arc(cx,cy,r,0,7);x.stroke();x.restore();}
-function label(x,cx,cy,text,color,W){
-  x.save();x.font='600 '+Math.round(W*0.032)+'px -apple-system,sans-serif';
-  const pad=W*0.012,tw=x.measureText(text).width,h=W*0.05;
-  let lx=cx-tw/2-pad,ly=cy-h-W*0.01;
-  lx=Math.max(4,Math.min(W-tw-2*pad-4,lx));ly=Math.max(h+4,ly);
-  x.fillStyle=color;x.globalAlpha=.92;x.beginPath();
-  if(x.roundRect)x.roundRect(lx,ly,tw+2*pad,h,h*0.3);else x.rect(lx,ly,tw+2*pad,h);
-  x.fill();x.globalAlpha=1;x.fillStyle='#fff';x.textBaseline='middle';
-  x.fillText(text,lx+pad,ly+h/2);x.restore();
-}
+let FILTER='all';
+function setFilter(f){FILTER=f;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));}
+function patch(x,cx,cy,r,color,a){x.save();const g=x.createRadialGradient(cx,cy,0,cx,cy,r);
+  g.addColorStop(0,color+a);g.addColorStop(.7,color+Math.round(parseInt(a,16)*0.4).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
+  x.fillStyle=g;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.restore();}
+function dot(x,cx,cy,r,color){x.save();x.fillStyle=color;x.globalAlpha=.9;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();
+  x.globalAlpha=1;x.strokeStyle='#fff';x.lineWidth=Math.max(1.5,r*0.3);x.stroke();x.restore();}
 
 function analyze(x,lm,W,H,data){
-  const R=Math.max(W,H);const rows=[];
-  // ---- 泛紅：臉頰 vs 額頭基準 ----
+  const R=Math.max(W,H);const rows=[];const show=k=>FILTER==='all'||FILTER===k;
+  // ---- 泛紅：臉頰/鼻翼 vs 額頭基準（乾淨綠色光暈，無文字）----
   let redFlag=false;
   if(data){
     const base=redness(sampleColor(data,W,H,lm,Z.fore));
-    const cl=redness(sampleColor(data,W,H,lm,Z.cheekL)),cr=redness(sampleColor(data,W,H,lm,Z.cheekR));
-    const nz=redness(sampleColor(data,W,H,lm,Z.nose));
-    const TH=8; // 相對閾值（會受光線影響）
-    [['cheekL',cl,Z.cheekL],['cheekR',cr,Z.cheekR],['nose',nz,Z.nose]].forEach(([k,val,idx])=>{
+    const TH=8;
+    [Z.cheekL,Z.cheekR,Z.nose].forEach(idx=>{
+      const val=redness(sampleColor(data,W,H,lm,idx));
       if(val-base>TH){redFlag=true;const ct=centroid(lm,idx,W,H);
-        if(ct){const cx=MX(ct.x/W,W),cy=ct.y;circle(x,cx,cy,R*0.072,'#4caf7d');label(x,cx,cy,'泛紅 → 綠色',' #4caf7d'.trim(),W);}}
+        if(ct&&show('red'))patch(x,MX(ct.x/W,W),ct.y,R*0.075,'#4caf7d','7a');}
     });
     rows.push(redFlag
-      ?{c:'#4caf7d',t:'偵測到泛紅區',s:'臉頰/鼻翼比額頭紅 → 上底妝前局部點<b>綠色校色 primer</b>中和'}
-      :{c:'#4caf7d',t:'泛紅不明顯',s:'目前沒看到明顯泛紅，可跳過綠色校色'});
+      ?{c:'#4caf7d',t:'🟢 偵測到泛紅',s:'臉頰/鼻翼比額頭紅 → 局部點<b>綠色校色 primer</b>'}
+      :{c:'#4caf7d',t:'🟢 泛紅不明顯',s:'沒看到明顯泛紅，可跳過綠色校色'});
   }
-  // ---- 提亮位（固定臉部結構）----
-  [['hiForehead',Z.hiForehead],['cupid',Z.cupid],['cheekHiL',Z.cheekHiL],['cheekHiR',Z.cheekHiR],['tzone',[6,197]]].forEach(([k,idx])=>{
-    const ct=centroid(lm,idx,W,H);if(ct){const cx=MX(ct.x/W,W),cy=ct.y;circle(x,cx,cy,R*0.045,'#a884d4');}
-  });
-  // 鼻樑中線提亮標一個總標籤
-  const nt=centroid(lm,Z.tzone,W,H);if(nt)label(x,MX(nt.x/W,W),nt.y,'提亮 → 打亮',' #a884d4'.trim(),W);
-  rows.push({c:'#a884d4',t:'提亮位',s:'鼻樑、額中、唇珠、顴骨高點 → <b>打亮</b>或想透白用<b>紫色 primer</b>'});
-  // ---- T 字控油 ----
-  const tt=centroid(lm,Z.nose,W,H);if(tt){const cx=MX(tt.x/W,W),cy=tt.y;circle(x,cx,cy,R*0.05,'#5b9bd5');label(x,cx,cy+R*0.09,'T 字 → 控油',' #5b9bd5'.trim(),W);}
-  rows.push({c:'#5b9bd5',t:'T 字（鼻翼/鼻頭）',s:'最易出油脫妝 → <b>控油 primer</b>局部打底、持妝更久'});
+  // ---- 提亮位：小紫點，乾淨不疊字 ----
+  if(show('hi')){
+    [[10,151],[0,37,267],[117,118],[346,347],[6,197]].forEach(idx=>{
+      const ct=centroid(lm,idx,W,H);if(ct)dot(x,MX(ct.x/W,W),ct.y,R*0.013,'#a884d4');});
+  }
+  rows.push({c:'#a884d4',t:'🟣 提亮位',s:'鼻樑、額中、唇珠、顴骨高點 → <b>打亮</b>，想透白用<b>紫色 primer</b>'});
+  // ---- T 字：一塊藍色光暈在鼻 ----
+  if(show('t')){const tt=centroid(lm,Z.nose,W,H);if(tt)patch(x,MX(tt.x/W,W),tt.y,R*0.07,'#5b9bd5','6a');}
+  rows.push({c:'#5b9bd5',t:'🔵 T 字（鼻翼/鼻頭）',s:'最易出油脫妝 → <b>控油 primer</b>局部打底'});
 
-  // render report (節流：內容變了才更新 DOM)
   const html=rows.map(r=>`<div class="row"><span class="dot" style="background:${r.c}"></span><div><b>${r.t}</b><small>${r.s}</small></div></div>`).join('');
   if(html!==lastReport){lastReport=html;$('rows').innerHTML=html;}
 }

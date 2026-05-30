@@ -45,7 +45,7 @@
 <div class="app">
   <div class="brand">S U I M I R A · LAB</div>
   <div class="h">看看你的臉，給你一點建議 🤍</div>
-  <div class="sub">全臉紫色透白 · 泛紅處點綠色 · T 字控油（妝前 primer 階段）</div>
+  <div class="sub">妝前 primer 建議 · 只把「泛紅處」圈在臉上，其它用講的</div>
 
   <div id="iab" class="iab hidden">⚠️ 你好像在 App（IG／LINE／FB）裡開的，相機會被擋。請用 <b>Safari／Chrome</b> 開 <code>suimira.com/face-lab.html</code>。</div>
 
@@ -57,16 +57,7 @@
   <div class="status" id="status"></div>
 
   <div class="legend">
-    <span class="lg"><span class="sw" style="background:#a884d4"></span>全臉 → 紫色透白</span>
-    <span class="lg"><span class="sw" style="background:#4caf7d"></span>泛紅處 → 綠色校色</span>
-    <span class="lg"><span class="sw" style="background:#5b9bd5"></span>T 字 → 控油</span>
-  </div>
-
-  <div class="chips" id="chips">
-    <button class="chip on" data-f="all" onclick="setFilter('all')">全部</button>
-    <button class="chip" data-f="face" onclick="setFilter('face')">全臉紫</button>
-    <button class="chip" data-f="red" onclick="setFilter('red')">泛紅</button>
-    <button class="chip" data-f="t" onclick="setFilter('t')">T 字</button>
+    <span class="lg"><span class="sw" style="background:#4caf7d"></span>臉上的綠圈 = 你可以點綠色的泛紅處（紫色全臉、T 字控油寫在下方建議）</span>
   </div>
 
   <button class="btn" id="go" onclick="start()">📸 開始分析我的臉</button>
@@ -182,10 +173,9 @@ function fillFace(x,lm,W,H,color){
 
 function analyze(x,lm,W,H,data){
   const R=Math.max(W,H);const rows=[];const show=k=>FILTER==='all'||FILTER===k;
-  // ---- 🟣 紫色校色 primer：全臉（透白、中和暗黃）----
-  if(show('face')) fillFace(x,lm,W,H,'#a884d4');
-  rows.push({c:'#a884d4',t:'🟣 想要透白？',s:'<b>紫色（薰衣草）primer 全臉</b>打一層 → 中和暗黃、整體提亮一階'});
-  // ---- 🟢 綠色校色 primer：只點在泛紅/痘紅的地方（局部）----
+  // ---- 🟣 紫色 = 全臉，只用文字講（不畫臉，整臉紫很醜，且大家知道紫色是全臉）----
+  rows.push({c:'#a884d4',t:'🟣 想要透白',s:'<b>紫色（薰衣草）primer 全臉</b>打一層 → 中和暗黃、整體提亮。（全臉用，不用看位置）'});
+  // ---- 🟢 綠色 = 唯一畫在臉上的：圈出泛紅處（局部）----
   let redFlag=false;
   if(data){
     const base=redness(sampleColor(data,W,H,lm,Z.fore));
@@ -193,18 +183,16 @@ function analyze(x,lm,W,H,data){
     [Z.cheekL,Z.cheekR,Z.nose].forEach(idx=>{
       const val=redness(sampleColor(data,W,H,lm,idx));
       if(val-base>TH){redFlag=true;const ct=centroid(lm,idx,W,H);
-        if(ct&&show('red'))patch(x,MX(ct.x/W,W),ct.y,R*0.07,'#4caf7d','7a');}
+        if(ct)patch(x,MX(ct.x/W,W),ct.y,R*0.07,'#4caf7d','7a');}
     });
     rows.push(redFlag
-      ?{c:'#4caf7d',t:'🟢 局部泛紅',s:'這幾處比額頭紅 → <b>綠色 primer 只點在紅的地方</b>中和；喜歡紅潤留著也好看 🤍'}
-      :{c:'#4caf7d',t:'🟢 膚色蠻均勻的',s:'沒看到明顯泛紅，綠色校色可以跳過'});
+      ?{c:'#4caf7d',t:'🟢 你這幾處有點紅',s:'圈起來的地方比較紅 → <b>綠色 primer 點在這些地方</b>中和就好；喜歡紅潤留著也行 🤍'}
+      :{c:'#4caf7d',t:'🟢 膚色蠻均勻的',s:'沒看到明顯泛紅，綠色可以不用'});
+  } else {
+    rows.push({c:'#4caf7d',t:'🟢 局部泛紅',s:'哪裡有紅點 → 綠色 primer 點在紅的地方中和'});
   }
-  // ---- 🔵 控油 primer：T 字（額頭一橫 + 鼻樑一豎 = 真的 T）----
-  if(show('t')){
-    glowLine(x,lm,[54,103,67,109,10,338,297,332,284],'#5b9bd5',W,H,0.032); // 額頭一橫
-    glowLine(x,lm,[168,6,197,195,5,4],'#5b9bd5',W,H,0.028);                // 鼻樑一豎
-  }
-  rows.push({c:'#5b9bd5',t:'🔵 T 字容易出油的話',s:'額頭 + 鼻（T 形）→ <b>控油 primer</b> 局部打底、持妝更久'});
+  // ---- 🔵 T 字控油 = 條件式建議（會出油/混合肌才用，文字為主，不畫臉）----
+  rows.push({c:'#5b9bd5',t:'🔵 如果你容易出油',s:'混合肌 / T 字（額頭+鼻）愛出油的話，那裡加一點<b>控油 primer</b> 會更持妝；不會出油就不用 🙂'});
   // 打亮 / 修容是上妝後的步驟，交給後面的 demo 教（不在 primer 這層）
 
   const html=rows.map(r=>`<div class="row"><span class="dot" style="background:${r.c}"></span><div><b>${r.t}</b><small>${r.s}</small></div></div>`).join('');

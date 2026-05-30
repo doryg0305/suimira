@@ -154,15 +154,15 @@ const STEPS=[
  {key:'highlight',ic:'✨',name:'打亮',where:'山根→鼻樑→鼻頭、額中、眼頭、眼下三角、唇珠、嘴角、下巴 — 點上再<b>拍開</b>',sku:'OFRA Cloud9',
    paths:[[168,6,197,195,4,1],[10,151,9],[133,243],[362,463],[118,117,101],[347,346,330],[37,0,267],[61,185],[291,409],[199,175,200]],color:'#f7e7c8',bs:0.6},
  {key:'blush',ic:'🌷',name:'腮紅（戀愛感主角）',where:'蘋果肌<b>一圈一圈打</b>、暈開，位置<b>別太高</b>',sku:'Dior 001 + Clinique Pink Pop',
-   paths:[[50,205,118],[280,425,347]],color:'#ff8fa0'},
- {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>輕掃珠光、撐出臥蠶',sku:'珠光香檳色',
-   paths:[[133,145,153],[362,374,380]],color:'#ffe3cf',bs:0.42},
- {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾+睫毛根最深</b> → 往眼頭、往上暈淡',sku:'LUMMIR 02',
-   paths:[[33,160,159,158,29],[263,387,386,385,259]],color:'#b58a6a',bs:0.45},
+   paths:[[50,205,118],[280,425,347]],color:'#ff8fa0',mode:'blush'},
+ {key:'eyeshadow',ic:'🤎',name:'眼影（深→淺）',where:'<b>眼尾+睫毛根最深</b> → 往眼頭、往上暈淡（看「怎麼做」放大圖）',sku:'LUMMIR 02',eye:'eyeshadow'},
+ {key:'liner',ic:'✒️',name:'眼線',where:'沿<b>上睫毛根</b>描細線、眼尾微往外帶（看「怎麼做」放大圖）',sku:'深棕/黑 眼線膠筆',eye:'eyeliner'},
+ {key:'mascara',ic:'🌿',name:'睫毛（睫毛膏）',where:'夾翹後從睫毛根<b>往上刷</b>、Z 字帶開不結塊（看「怎麼做」放大圖）',sku:'纖長/濃密 睫毛膏',eye:'mascara'},
+ {key:'aegyo',ic:'👁️',name:'臥蠶',where:'<b>下睫毛正下方</b>輕掃珠光、撐出臥蠶（看「怎麼做」放大圖）',sku:'珠光香檳色',eye:'aegyo'},
  {key:'brow',ic:'🖌️',name:'眉（自然毛流）',where:'順毛流補：<b>眉頭淡、眉尾實</b>、缺的補就好',sku:'灰棕眉筆/眉粉',
-   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#7a5436',bs:0.5},
+   paths:[[70,63,105,66,107],[336,296,334,293,300]],color:'#7a5436',mode:'brow'},
  {key:'lip',ic:'💋',name:'唇 · 嘟嘟唇',where:'中央上色最深 → 往邊緣暈、下唇中央點唇蜜',sku:"rom&nd 15",
-   paths:[[61,40,37,0,267,270,291]],color:'#e0808f',bs:0.7},
+   paths:[[61,40,37,0,267,270,291]],color:'#e0808f',mode:'lip'},
 ];
 
 /* views */
@@ -176,7 +176,10 @@ function showTab(t){const m=t==='m';$('viewM').classList.toggle('hidden',!m);$('
 
 /* 怎麼做：整臉=手法動畫；特定區域=位置說明 + 提示看鏡子小刷子 */
 function renderHow(){const s=STEPS[cur],h=$('howContent');
-  if(!s.paths){ if(howLoaded!=='anim'){h.innerHTML='<div class="howwrap"><iframe src="./primer-anim.html" title="手法示範"></iframe></div>';howLoaded='anim';} }
+  if(s.eye){ const src='./eye-anim.html?m='+s.eye;
+    if(howLoaded!==src){h.innerHTML='<div class="howwrap"><iframe src="'+src+'" title="放大眼睛"></iframe></div>';howLoaded=src;} }
+  else if(!s.paths){ const src='./primer-anim.html';
+    if(howLoaded!==src){h.innerHTML='<div class="howwrap"><iframe src="'+src+'" title="手法示範"></iframe></div>';howLoaded=src;} }
   else{ howLoaded='';
     h.innerHTML='<div class="card"><div class="stepname">'+s.ic+' '+s.name+'</div><div class="where">'+s.where+'</div>'
       +'<div class="howtbd">👈 切回「🪞 鏡子」，小刷子會<b>每幾秒在你臉上示範一次掃法</b>，跟著掃。</div></div>'; }
@@ -221,33 +224,78 @@ function loop(){
 /* 間歇小刷子：每 PERIOD 一輪，只有前 ON 毫秒出現掃一次，其餘時間乾淨 */
 function alongP(P,t){const s=t*(P.length-1),i=Math.min(Math.floor(s),P.length-2),f=s-i;return{x:P[i].x+(P[i+1].x-P[i].x)*f,y:P[i].y+(P[i+1].y-P[i].y)*f};}
 function brushHead(x,cx,cy,R,color,bs){
-  bs=bs||1;const d=R*0.02*bs;
-  x.save();
-  const g=x.createRadialGradient(cx,cy,0,cx,cy,d);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(1,'rgba(255,255,255,0)');
-  x.fillStyle=g;x.beginPath();x.arc(cx,cy,d,0,7);x.fill();
-  x.translate(cx,cy);x.rotate(-0.7);
-  x.fillStyle='#caa06a';x.fillRect(R*0.011*bs,-R*0.009*bs,R*0.038*bs,R*0.018*bs);
-  x.fillStyle='#7a5230';x.fillRect(R*0.046*bs,-R*0.006*bs,R*0.085*bs,R*0.012*bs);
+  bs=bs||1;
+  x.save();x.translate(cx,cy);x.rotate(-0.7);
+  x.fillStyle='#7a5230';x.fillRect(R*0.03*bs,-R*0.005*bs,R*0.075*bs,R*0.01*bs);      // 柄
+  x.fillStyle='#caa06a';x.fillRect(R*0.012*bs,-R*0.008*bs,R*0.02*bs,R*0.016*bs);      // 金屬箍
+  x.fillStyle='#efe2cd';x.beginPath();x.moveTo(R*0.012*bs,-R*0.008*bs);x.lineTo(R*0.012*bs,R*0.008*bs);x.lineTo(0,0);x.closePath();x.fill(); // 毛尖收成一點
   x.restore();
+  x.save();x.fillStyle='#fff';x.globalAlpha=.9;x.beginPath();x.arc(cx,cy,R*0.005*bs,0,7);x.fill();x.restore(); // 只在最前端一個小接觸點（不是大餅）
 }
 function brushSweep(x,lm,idx,prog,w,h,color,bs){
   bs=bs||1;
   const P=idx.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
   const R=Math.max(w,h);
   x.save();x.lineCap='round';x.lineJoin='round';
-  x.globalAlpha=.5;x.strokeStyle=color;x.lineWidth=R*0.016*bs;
+  x.globalAlpha=.4;x.strokeStyle=color;x.lineWidth=R*0.011*bs;
   const upto=prog*(P.length-1);
   x.beginPath();x.moveTo(P[0].x,P[0].y);
   for(let k=1;k<P.length;k++){if(k<=upto){x.lineTo(P[k].x,P[k].y);}else{const f=upto-(k-1);if(f>0){x.lineTo(P[k-1].x+(P[k].x-P[k-1].x)*f,P[k-1].y+(P[k].y-P[k-1].y)*f);}break;}}
   x.stroke();x.restore();
   const head=alongP(P,Math.min(1,prog));brushHead(x,head.x,head.y,R,color,bs);
 }
+/* 腮紅：一圈一圈繞蘋果肌 */
+function blushHint(x,lm,idxs,prog,w,h,color){
+  const ps=idxs.map(i=>lm[i]).filter(Boolean);if(!ps.length)return;
+  const cx=ps.reduce((a,p)=>a+p.x,0)/ps.length*w, cy=ps.reduce((a,p)=>a+p.y,0)/ps.length*h;
+  const R=Math.max(w,h),rad=R*0.05,ang=prog*3*2*Math.PI; // ON 窗內繞 3 圈
+  x.save();x.globalCompositeOperation='multiply';
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,rad);g.addColorStop(0,color+'33');g.addColorStop(1,color+'00');
+  x.globalAlpha=.55*prog;x.fillStyle=g;x.beginPath();x.arc(cx,cy,rad,0,7);x.fill();x.restore();
+  x.save();x.strokeStyle='rgba(255,255,255,.5)';x.lineWidth=R*0.004;x.setLineDash([R*0.012,R*0.012]);
+  x.beginPath();x.arc(cx,cy,rad*0.55,0,7);x.stroke();x.restore();
+  const px=cx+rad*0.55*Math.cos(ang),py=cy+rad*0.55*Math.sin(ang);
+  x.save();x.fillStyle='#fff';x.globalAlpha=.9;x.beginPath();x.arc(px,py,R*0.007,0,7);x.fill();x.restore();
+}
+/* 眉：一根根往上斜的毛流 */
+function browHint(x,lm,idxs,prog,w,h,color){
+  const P=idxs.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<2)return;
+  const R=Math.max(w,h),N=10,hl=R*0.016;
+  x.save();x.strokeStyle=color;x.lineWidth=R*0.0038;x.lineCap='round';x.globalAlpha=.75;
+  const upto=prog*N;
+  for(let i=0;i<=N;i++){if(i>upto)break;const p=alongP(P,i/N);
+    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-hl*0.4,p.y-hl);x.stroke();}
+  x.restore();
+  const head=alongP(P,Math.min(1,prog));
+  x.save();x.fillStyle='#fff';x.globalAlpha=.9;x.beginPath();x.arc(head.x,head.y,R*0.006,0,7);x.fill();x.restore();
+}
+/* 唇：整個唇、中央最深 → 邊緣淡 + 唇珠 C + 下唇唇蜜 */
+const LIP=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146];
+function lipHint(x,lm,prog,w,h,color){
+  const P=LIP.map(i=>lm[i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h}));if(P.length<8||!lm[13]||!lm[14])return;
+  const R=Math.max(w,h);
+  x.save();x.beginPath();P.forEach((p,k)=>k?x.lineTo(p.x,p.y):x.moveTo(p.x,p.y));x.closePath();x.clip();
+  x.globalCompositeOperation='multiply';
+  x.globalAlpha=.2*prog;x.fillStyle=color;x.fillRect(0,0,w,h);             // 整個唇淡底
+  const cx=lm[13].x*w,cy=((lm[13].y+lm[14].y)/2)*h;
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,R*0.05);
+  g.addColorStop(0,color+'aa');g.addColorStop(.6,color+'44');g.addColorStop(1,color+'00');
+  x.globalAlpha=prog;x.fillStyle=g;x.fillRect(0,0,w,h);                    // 中央最深
+  x.restore();
+  x.save();x.globalCompositeOperation='screen';x.fillStyle='rgba(255,246,238,.7)';
+  if(lm[0]){x.beginPath();x.arc(lm[0].x*w,lm[0].y*h,R*0.01,0,7);x.fill();}  // 唇珠 C
+  x.beginPath();x.arc(lm[14].x*w,lm[14].y*h,R*0.013,0,7);x.fill();         // 下唇唇蜜
+  x.restore();
+}
 function drawHint(x,lm,w,h){
   const s=STEPS[cur];if(!s.paths)return;
   const PERIOD=8000,ON=2300,t=performance.now()%PERIOD;
   if(t>ON)return;                 // 其餘 ~5.7 秒：乾淨鏡子、看自己
-  const prog=t/ON;                // 0→1 掃一次
-  s.paths.forEach(p=>brushSweep(x,lm,p,prog,w,h,s.color||'#ffffff',s.bs||1));
+  const prog=t/ON, color=s.color||'#ffffff';
+  if(s.mode==='blush'){ s.paths.forEach(p=>blushHint(x,lm,p,prog,w,h,color)); }
+  else if(s.mode==='brow'){ s.paths.forEach(p=>browHint(x,lm,p,prog,w,h,color)); }
+  else if(s.mode==='lip'){ lipHint(x,lm,prog,w,h,color); }
+  else { s.paths.forEach(p=>brushSweep(x,lm,p,prog,w,h,color,s.bs||1)); }
 }
 
 /* step nav */
@@ -257,7 +305,9 @@ function renderCard(){const s=STEPS[cur];
   $('prev').disabled=cur===0;$('next').textContent=cur===STEPS.length-1?'完成 ✓':'下一步 ›';
   const area=!!s.paths;
   $('mtag').classList.toggle('hidden',!area);
-  $('cleanline').textContent=area?'特定區域 · 小刷子會每幾秒在你臉上示範掃法 🤍':'整臉步驟 · 鏡子保持乾淨，手法看「📋 怎麼做」🤍';
+  $('cleanline').textContent = s.eye ? '眼周細節 · 看「📋 怎麼做」的放大眼睛示意，對著鏡子做 🤍'
+    : area ? '特定區域 · 小刷子會每幾秒在你臉上示範掃法 🤍'
+    : '整臉步驟 · 鏡子保持乾淨，手法看「📋 怎麼做」🤍';
   renderHow();}
 function step(d){if(d>0&&cur===STEPS.length-1){finish();return;}cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
 function finish(){$('doing').classList.add('hidden');$('done').classList.remove('hidden');}

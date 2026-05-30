@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Suimira · 放大眼睛示意</title>
+<style>
+  :root{--bg:#fbf3ee;--ink:#2a211c;--muted:#8a7a6e;--rose:#d98a8a;--gold:#c8a27a;--line:#ecdfd4;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif;line-height:1.5;}
+  .wrap{max-width:440px;margin:0 auto;padding:14px 16px 24px;}
+  .title{text-align:center;font-size:17px;font-weight:700;margin:2px 0;}
+  .sub{text-align:center;font-size:12.5px;color:var(--muted);margin-bottom:8px;}
+  svg{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:16px;}
+  .legend{margin-top:10px;font-size:13px;}
+  .lg{display:flex;align-items:flex-start;gap:8px;margin:6px 2px;}
+  .lg .sw{flex:none;width:12px;height:12px;border-radius:3px;margin-top:4px;}
+  .lg b{font-weight:700;}
+  .note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;opacity:.85;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title" id="title">放大眼睛</div>
+  <div class="sub" id="sub"></div>
+  <div id="svgbox"></div>
+  <div class="legend" id="legend"></div>
+  <div class="note">放大示意 — 對著鏡子裡自己的眼睛、照這個做</div>
+</div>
+
+<script>
+const m=(new URLSearchParams(location.search)).get('m')||'eyeshadow';
+
+// 共用：眼睛底圖（眼白 + 虹膜 + 上睫毛 + 折線）
+const EYE=`
+  <path d="M40,118 Q160,46 280,118 Q160,172 40,118 Z" fill="#fff" stroke="#e7d6c8" stroke-width="2"/>
+  <clipPath id="eyeclip"><path d="M40,118 Q160,46 280,118 Q160,172 40,118 Z"/></clipPath>
+  <g clip-path="url(#eyeclip)">
+    <circle cx="160" cy="116" r="40" fill="#7a5436"/>
+    <circle cx="160" cy="116" r="38" fill="url(#iris)"/>
+    <circle cx="160" cy="116" r="17" fill="#241712"/>
+    <circle cx="150" cy="105" r="6" fill="#fff" opacity=".9"/>
+  </g>
+  <path d="M40,118 Q160,46 280,118" fill="none" stroke="#5a4636" stroke-width="3.5"/>
+  <path d="M72,98 Q160,62 252,100" fill="none" stroke="#e3cdbb" stroke-width="2" opacity=".7"/>
+  <g stroke="#5a4636" stroke-width="2.4" stroke-linecap="round">
+    <line x1="270" y1="112" x2="284" y2="104"/><line x1="262" y1="103" x2="274" y2="92"/>
+    <line x1="250" y1="96" x2="259" y2="84"/><line x1="236" y1="90" x2="243" y2="78"/>
+  </g>`;
+
+const IRISDEF=`<defs><radialGradient id="iris" cx="50%" cy="45%" r="55%">
+  <stop offset="0%" stop-color="#a87d54"/><stop offset="100%" stop-color="#5e3f29"/></radialGradient>`;
+
+// 小刷子（沿路徑掃）
+function brush(pathD,dur){return `
+  <g opacity="0">
+    <circle cx="0" cy="0" r="7" fill="#fff"/>
+    <rect x="5" y="-3" width="13" height="6" rx="3" fill="#caa06a" transform="rotate(-32)"/>
+    <rect x="15" y="-2.2" width="22" height="4.4" rx="2" fill="#7a5230" transform="rotate(-32)"/>
+    <animateMotion dur="${dur}" repeatCount="indefinite" rotate="0" path="${pathD}"/>
+    <animate attributeName="opacity" dur="${dur}" repeatCount="indefinite" values="0;1;1;1;0" keyTimes="0;0.1;0.5;0.85;1"/>
+  </g>`;}
+
+let svg='',title='',sub='',legend='';
+
+if(m==='eyeshadow'){
+  title='眼影 — 深 → 淺';
+  sub='眼尾 + 睫毛根最深 → 往上、往內暈淡';
+  const brushPath='M262,112 Q200,96 130,98 Q98,100 78,110'; // 從眼尾沿睫毛根往眼頭
+  svg=`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">
+    ${IRISDEF}
+    <linearGradient id="shadow" x1="100%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#6b4a30" stop-opacity=".85"/>
+      <stop offset="45%" stop-color="#a07a55" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#caa882" stop-opacity="0"/></linearGradient></defs>
+    ${EYE}
+    <!-- 眼影區塊：上眼皮 lash→crease，眼尾最深往內上暈淡 -->
+    <path d="M48,118 Q160,52 274,118 Q200,96 130,98 Q90,100 48,118 Z" fill="url(#shadow)"/>
+    <!-- 暈染方向箭頭（往上往內）改成柔光示意：用刷子掃 -->
+    ${brush(brushPath,'3s')}
+    <!-- 標：最深處 -->
+    <circle cx="256" cy="112" r="6" fill="#6b4a30"/>
+  </svg>`;
+  legend=`
+    <div class="lg"><span class="sw" style="background:#6b4a30"></span><div><b>最深</b>：眼尾 + 睫毛根（外側、貼睫毛那條）</div></div>
+    <div class="lg"><span class="sw" style="background:#caa882"></span><div><b>暈淡</b>：往<b>上</b>(眉骨方向) + 往<b>內</b>(眼頭) 越來越淡</div></div>
+    <div class="lg"><span class="sw" style="background:#fff;border:1px solid #ddd"></span><div>下眼尾可帶一點點、接到腮紅</div></div>`;
+}else if(m==='eyeliner'){
+  title='眼線 — 沿上睫毛根';
+  sub='貼著上睫毛根描細線、眼尾微微往外帶一點';
+  const brushPath='M70,112 Q160,56 272,108 L288,98';
+  svg=`<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">${IRISDEF}</defs>
+    ${EYE}
+    <path d="M70,112 Q160,56 272,108 L288,98" fill="none" stroke="#2a1c14" stroke-width="4" stroke-linecap="round"/>
+    ${brush(brushPath,'3s')}
+  </svg>`;
+  legend=`
+    <div class="lg"><span class="sw" style="background:#2a1c14"></span><div><b>貼睫毛根</b>畫細線：內側細、越往眼尾可以越粗一點</div></div>
+    <div class="lg"><span class="sw" style="background:#fff;border:1px solid #ddd"></span><div>眼尾<b>微微往外、往上</b>帶一小撇（不用太長太誇張）</div></div>`;
+}else if(m==='mascara'){
+  title='睫毛 — 夾翹 + 往上刷';
+  sub='睫毛夾夾翹 → 從睫毛根往上刷、Z 字帶開不結塊';
+  const brushPath='M250,96 Q160,68 80,100';
+  svg=`<svg viewBox="0 0 320 205" xmlns="http://www.w3.org/2000/svg">${IRISDEF}</defs>
+    ${EYE}
+    <g stroke="#241712" stroke-width="2.6" stroke-linecap="round" fill="none">
+      <path d="M250,94 q6,-16 18,-22"/><path d="M232,86 q4,-16 14,-24"/>
+      <path d="M210,80 q2,-16 8,-26"/><path d="M186,76 q0,-16 2,-26"/>
+      <path d="M160,74 q-1,-16 -2,-26"/><path d="M134,76 q-2,-16 -8,-25"/>
+      <path d="M110,80 q-4,-15 -12,-23"/>
+    </g>
+    ${brush(brushPath,'3s')}
+  </svg>`;
+  legend=`
+    <div class="lg"><span class="sw" style="background:#241712"></span><div>先<b>睫毛夾</b>夾出弧度 → 睫毛膏從<b>睫毛根</b>往上、<b>Z 字</b>輕輕帶開</div></div>
+    <div class="lg"><span class="sw" style="background:#fff;border:1px solid #ddd"></span><div>下睫毛輕輕點一點就好、不用太多</div></div>`;
+}else{ // aegyo 臥蠶
+  title='臥蠶 — 下睫毛正下方';
+  sub='下睫毛正下方一條細珠光 → 撐出臥蠶、眼睛變大';
+  const brushPath='M250,140 Q160,178 74,140'; // 沿下睫毛正下方
+  svg=`<svg viewBox="0 0 320 205" xmlns="http://www.w3.org/2000/svg">
+    ${IRISDEF}
+    <linearGradient id="pearl" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fff6e9" stop-opacity=".2"/>
+      <stop offset="50%" stop-color="#fff3df" stop-opacity=".95"/>
+      <stop offset="100%" stop-color="#fff6e9" stop-opacity=".2"/></linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="2.2"/></filter></defs>
+    ${EYE}
+    <!-- 下睫毛線 -->
+    <path d="M52,120 Q160,166 268,120" fill="none" stroke="#7a5e4a" stroke-width="2.4" opacity=".7"/>
+    <!-- 臥蠶珠光：細、就在下睫毛正下方 -->
+    <path d="M74,134 Q160,172 250,134" fill="none" stroke="url(#pearl)" stroke-width="9" stroke-linecap="round" filter="url(#soft)"/>
+    <path d="M74,134 Q160,172 250,134" fill="none" stroke="#fffaf0" stroke-width="3" stroke-linecap="round" opacity=".9"/>
+    ${brush(brushPath,'3s')}
+  </svg>`;
+  legend=`
+    <div class="lg"><span class="sw" style="background:#fff3df;border:1px solid #e6d8c5"></span><div><b>就這一條</b>：下睫毛<b>正下方</b>、貼著下睫毛輕掃（不是打在眼睛上、不要太寬）</div></div>
+    <div class="lg"><span class="sw" style="background:#fff;border:1px solid #ddd"></span><div>香檳/珠光色，撐出臥蠶 → 眼睛瞬間變大、減齡</div></div>`;
+}
+
+document.getElementById('title').textContent=title;
+document.getElementById('sub').textContent=sub;
+document.getElementById('svgbox').innerHTML=svg;
+document.getElementById('legend').innerHTML=legend;
+</script>
+</body>
+</html>

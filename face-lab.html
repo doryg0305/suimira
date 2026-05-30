@@ -166,6 +166,14 @@ function patch(x,cx,cy,r,color,a){x.save();const g=x.createRadialGradient(cx,cy,
   x.fillStyle=g;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.restore();}
 function dot(x,cx,cy,r,color){x.save();x.fillStyle=color;x.globalAlpha=.9;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();
   x.globalAlpha=1;x.strokeStyle='#fff';x.lineWidth=Math.max(1.5,r*0.3);x.stroke();x.restore();}
+function glowLine(x,lm,idxs,color,W,H,radF){
+  const P=idxs.map(i=>lm[i]).filter(p=>p).map(p=>({x:MX(p.x,W),y:p.y*H}));if(!P.length)return;
+  const R=Math.max(W,H),rad=R*(radF||0.026);x.save();
+  for(let t=0;t<=1.001;t+=0.05){const s=t*(P.length-1),i=Math.min(Math.floor(s),Math.max(0,P.length-2)),f=s-i;
+    const px=P.length<2?P[0].x:P[i].x+(P[i+1].x-P[i].x)*f,py=P.length<2?P[0].y:P[i].y+(P[i+1].y-P[i].y)*f;
+    const g=x.createRadialGradient(px,py,0,px,py,rad);g.addColorStop(0,color+'88');g.addColorStop(.6,color+'30');g.addColorStop(1,color+'00');
+    x.fillStyle=g;x.beginPath();x.arc(px,py,rad,0,7);x.fill();}
+  x.restore();}
 
 function analyze(x,lm,W,H,data){
   const R=Math.max(W,H);const rows=[];const show=k=>FILTER==='all'||FILTER===k;
@@ -183,10 +191,14 @@ function analyze(x,lm,W,H,data){
       ?{c:'#4caf7d',t:'🟢 偵測到泛紅',s:'臉頰/鼻翼比額頭紅 → 局部點<b>綠色校色 primer</b>'}
       :{c:'#4caf7d',t:'🟢 泛紅不明顯',s:'沒看到明顯泛紅，可跳過綠色校色'});
   }
-  // ---- 提亮位：小紫點，乾淨不疊字 ----
+  // ---- 提亮位：發光線條/筆觸（鼻樑亮線 + 顴骨 + 額中/唇珠/下巴）----
   if(show('hi')){
-    [[10,151],[0,37,267],[117,118],[346,347],[6,197]].forEach(idx=>{
-      const ct=centroid(lm,idx,W,H);if(ct)dot(x,MX(ct.x/W,W),ct.y,R*0.013,'#a884d4');});
+    glowLine(x,lm,[168,6,197,195,5,4],'#a884d4',W,H,0.020); // 鼻樑一條亮線
+    glowLine(x,lm,[117,118,101],'#a884d4',W,H,0.028);       // 左顴骨
+    glowLine(x,lm,[346,347,330],'#a884d4',W,H,0.028);       // 右顴骨
+    glowLine(x,lm,[10,151,9],'#a884d4',W,H,0.030);          // 額中
+    glowLine(x,lm,[0,37,267],'#a884d4',W,H,0.020);          // 唇珠
+    glowLine(x,lm,[152,175],'#a884d4',W,H,0.024);           // 下巴
   }
   rows.push({c:'#a884d4',t:'🟣 提亮位',s:'鼻樑、額中、唇珠、顴骨高點 → <b>打亮</b>，想透白用<b>紫色 primer</b>'});
   // ---- T 字：一塊藍色光暈在鼻 ----

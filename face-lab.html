@@ -67,6 +67,8 @@
     <div id="rows"><div class="row"><small>開相機後，這裡會即時列出在你臉上偵測到什麼。</small></div></div>
   </div>
 
+  <button id="redBtn" onclick="toggleRed()" style="width:calc(100% - 32px);margin:0 16px 8px;border:1.5px solid #4caf7d;background:#fff;color:#3a8f64;border-radius:15px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">🔍 我想看我有沒有泛紅</button>
+
   <button class="btn" id="nextBtn" onclick="location.href='./quiz.html'">下一步：選你的 primer 💗 →</button>
 
   <div class="note">POC v0 · 泛紅是用「臉頰 vs 額頭基準」的相對色差判斷（會受光線影響，unverified）。位置圈選是固定臉部結構。<br>Alicia 草擬，老闆驗效果。</div>
@@ -152,6 +154,8 @@ function loop(){
 function MX(px,W){return (1-px)*W;}
 let FILTER='all';
 function setFilter(f){FILTER=f;document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c.dataset.f===f));}
+let showRed=false;
+function toggleRed(){showRed=!showRed;const b=$('redBtn');if(b)b.textContent=showRed?'🙈 不看泛紅了，全臉紫就好':'🔍 我想看我有沒有泛紅';lastReport='';}
 function patch(x,cx,cy,r,color,a){x.save();const g=x.createRadialGradient(cx,cy,0,cx,cy,r);
   g.addColorStop(0,color+a);g.addColorStop(.7,color+Math.round(parseInt(a,16)*0.4).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');
   x.fillStyle=g;x.beginPath();x.arc(cx,cy,r,0,7);x.fill();x.restore();}
@@ -175,21 +179,21 @@ function analyze(x,lm,W,H,data){
   const R=Math.max(W,H);const rows=[];const show=k=>FILTER==='all'||FILTER===k;
   // ---- 🟣 紫色 = 全臉，只用文字講（不畫臉，整臉紫很醜，且大家知道紫色是全臉）----
   rows.push({c:'#a884d4',t:'🟣 想要透白',s:'<b>紫色（薰衣草）primer 全臉</b>打一層 → 中和暗黃、整體提亮。（全臉用，不用看位置）'});
-  // ---- 🟢 綠色 = 唯一畫在臉上的：圈出泛紅處（局部）----
-  let redFlag=false;
-  if(data){
-    const base=redness(sampleColor(data,W,H,lm,Z.fore));
-    const TH=8;
-    [Z.cheekL,Z.cheekR,Z.nose].forEach(idx=>{
-      const val=redness(sampleColor(data,W,H,lm,idx));
-      if(val-base>TH){redFlag=true;const ct=centroid(lm,idx,W,H);
-        if(ct)patch(x,MX(ct.x/W,W),ct.y,R*0.07,'#4caf7d','7a');}
-    });
-    rows.push(redFlag
-      ?{c:'#4caf7d',t:'🟢 你這幾處有點紅',s:'圈起來的地方比較紅 → <b>綠色 primer 點在這些地方</b>中和就好；喜歡紅潤留著也行 🤍'}
-      :{c:'#4caf7d',t:'🟢 膚色蠻均勻的',s:'沒看到明顯泛紅，綠色可以不用'});
+  // ---- 🟢 綠色 = 藏在按鈕後面：使用者按「我想看泛紅」才偵測 + 圈出來 ----
+  if(showRed){
+    let redFlag=false;
+    if(data){
+      const base=redness(sampleColor(data,W,H,lm,Z.fore));const TH=8;
+      [Z.cheekL,Z.cheekR,Z.nose].forEach(idx=>{
+        const val=redness(sampleColor(data,W,H,lm,idx));
+        if(val-base>TH){redFlag=true;const ct=centroid(lm,idx,W,H);if(ct)patch(x,MX(ct.x/W,W),ct.y,R*0.07,'#4caf7d','7a');}
+      });
+      rows.push(redFlag
+        ?{c:'#4caf7d',t:'🟢 你這幾處有點紅',s:'圈起來的地方比較紅 → 想中和可以<b>點一點綠色</b>；不想塗、全臉紫就好也完全 OK 🤍'}
+        :{c:'#4caf7d',t:'🟢 你的膚色蠻均勻的',s:'沒看到明顯泛紅，綠色不用，全臉紫就好'});
+    }
   } else {
-    rows.push({c:'#4caf7d',t:'🟢 局部泛紅',s:'哪裡有紅點 → 綠色 primer 點在紅的地方中和'});
+    rows.push({c:'#4caf7d',t:'🟢 想知道自己哪裡泛紅嗎？',s:'按下面「<b>我想看我有沒有泛紅</b>」就圈給你看；不想看、直接全臉紫也完全可以 🤍'});
   }
   // ---- 🔵 T 字控油 = 條件式建議（會出油/混合肌才用，文字為主，不畫臉）----
   rows.push({c:'#5b9bd5',t:'🔵 如果你容易出油',s:'混合肌 / T 字（額頭+鼻）愛出油的話，那裡加一點<b>控油 primer</b> 會更持妝；不會出油就不用 🙂'});

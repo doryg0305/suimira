@@ -61,6 +61,15 @@
 <div class="app">
   <div class="brand">S U I M I R A</div>
 
+  <!-- in-app browser 警告（IG/LINE/FB 內建瀏覽器會擋相機）-->
+  <div id="iabWarn" class="hidden" style="margin:6px 16px 0;background:#fff4e5;border:1px solid #f3d9a8;border-radius:14px;padding:12px 14px;font-size:13px;color:#8a5a1a;">
+    ⚠️ 你好像是在 App（IG／LINE／FB）裡打開的，它會擋住相機。<br>
+    請點右上角「⋯」→「<b>用瀏覽器開啟</b>」（Safari／Chrome），相機才能用。
+    <button onclick="navigator.clipboard&&navigator.clipboard.writeText('https://suimira.com').then(()=>{this.textContent='已複製 ✓'})"
+      style="display:block;width:100%;margin-top:10px;border:none;border-radius:11px;padding:10px;font-size:13px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--rose),var(--gold));cursor:pointer;">
+      複製連結 suimira.com</button>
+  </div>
+
   <!-- ===== VIEW 1: WALL ===== -->
   <div id="vWall">
     <div class="h">你想變成誰？</div>
@@ -134,6 +143,19 @@
 const $=id=>document.getElementById(id);
 let FaceLandmarker,FilesetResolver,landmarker=null,stream=null,rafId=null,cur=0,lastLm=null;
 
+/* ---- 相機環境偵測 + 友善錯誤（讓朋友真的開得了相機）---- */
+function isInApp(){return /FBAN|FBAV|FB_IAB|Instagram|Line\/|Messenger|MicroMessenger|Twitter|TikTok/i.test(navigator.userAgent||'');}
+function camError(e){
+  const n=(e&&e.name)||'';let msg;
+  if(isInApp()) msg='請改用 Safari／Chrome 開這個頁面：點右上角「⋯」→「用瀏覽器開啟」。App（IG／LINE／FB）內建瀏覽器會擋相機。';
+  else if(n==='NotAllowedError'||n==='SecurityError'||n==='PermissionDeniedError') msg='相機權限被擋了。請按「允許」使用相機；若之前按過拒絕，到瀏覽器網址列旁的鎖頭 → 開啟相機 → 重新整理再試。';
+  else if(n==='NotFoundError'||n==='OverconstrainedError'||n==='DevicesNotFoundError') msg='找不到可用的前鏡頭。';
+  else if(n==='NotReadableError'||n==='TrackStartError') msg='相機被其他 App 佔用了。先關掉其他在用相機的 App，再重新整理試一次。';
+  else msg='開不了相機（'+(e.message||n||'未知')+'）。請改用 Safari／Chrome，並允許相機權限。';
+  setStatus('⚠️ '+msg);
+  const h=$('hint');if(h){h.classList.remove('hidden');h.innerHTML='⚠️ '+msg;}
+}
+
 /* ---- 林襄 look 教學步驟（path = MediaPipe landmark idx；create-not-fill：教位置+方向，不擬真上妝）---- */
 const STEPS=[
  {key:'toner',ic:'💧',name:'1 · 化妝水 Toner',where:'潔面後，化妝水<b>輕拍全臉</b>補水、二次清潔',sku:'保濕化妝水',mode:'base'},
@@ -177,8 +199,9 @@ async function startTeach(){
   $('vTarget').classList.add('hidden');$('vTeach').classList.remove('hidden');
   cur=0;renderCard();$('doing').classList.remove('hidden');$('done').classList.add('hidden');
   try{await initModel();}catch(e){setStatus('模型載入失敗：'+e.message);return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){camError({name:isInApp()?'InApp':'Unsupported',message:'此瀏覽器不支援相機'});return;}
   try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});}
-  catch(e){setStatus('開不了相機：'+e.message+'（手機要 HTTPS）');return;}
+  catch(e){camError(e);return;}
   $('video').srcObject=stream;await $('video').play();
   $('hint').classList.add('hidden');setStatus('鏡頭運作中 · 跟著刷子的方向畫 ✨');
   loop();
@@ -306,6 +329,8 @@ function renderCard(){const s=STEPS[cur];$('sNum').textContent=`STEP ${cur+1} / 
 function step(d){if(d>0&&cur===STEPS.length-1){finish();return;}cur=Math.max(0,Math.min(STEPS.length-1,cur+d));renderCard();}
 function finish(){stopCam();$('doing').classList.add('hidden');$('done').classList.remove('hidden');}
 renderCard();
+// 一進來就偵測：若在 App 內建瀏覽器，先亮警告條引導用 Safari/Chrome
+(function(){if(isInApp()){var w=$('iabWarn');if(w)w.classList.remove('hidden');}})();
 // feedback form → Formspree（看得到是誰 + 回饋）
 (function(){var f=$('fb');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();
   fetch(f.action,{method:'POST',body:new FormData(f),headers:{'Accept':'application/json'}})
